@@ -11,6 +11,7 @@ const CONFIG = {
   WEDDING_DATE: "2027年2月11日（木）",
   RECEPTION_TIME: "開場 11:30 / 挙式 12:00 / 披露宴 13:00",
   VENUE_NAME: "カサデアンジェラ青山",
-  VENUE_ADDRESS: "東京都千代田区1-1-1",
+  VENUE_ADDRESS: "東京都港区南青山2-23-18",
+  VENUE_PHONE: "03-5413-5533",
   RESPONSE_DEADLINE: "2026年12月10日（木）"
 };

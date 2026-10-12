@@ -176,10 +176,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (CONFIG.VENUE_NAME) {
       const venueElem = document.getElementById("venueNameDisplay");
       if (venueElem) venueElem.textContent = CONFIG.VENUE_NAME;
+      const openingVenue = document.getElementById("openingVenueDisplay");
+      if (openingVenue) openingVenue.textContent = CONFIG.VENUE_NAME;
     }
     if (CONFIG.VENUE_ADDRESS) {
       const addrElem = document.getElementById("venueAddressDisplay");
       if (addrElem) addrElem.textContent = CONFIG.VENUE_ADDRESS;
+      const mapLink = document.getElementById("venueMapLink");
+      if (mapLink) {
+        const query = encodeURIComponent((CONFIG.VENUE_NAME || "") + " " + CONFIG.VENUE_ADDRESS);
+        mapLink.href = CONFIG.VENUE_MAP_URL || `https://www.google.com/maps/search/?api=1&query=${query}`;
+      }
+    }
+    if (CONFIG.VENUE_PHONE) {
+      const phoneLink = document.getElementById("venuePhoneLink");
+      if (phoneLink) {
+        phoneLink.href = `tel:${CONFIG.VENUE_PHONE.replace(/[^0-9+]/g, "")}`;
+        phoneLink.textContent = CONFIG.VENUE_PHONE;
+      }
     }
     if (CONFIG.RESPONSE_DEADLINE) {
       const deadlineElem = document.getElementById("responseDeadlineDisplay");
@@ -420,6 +434,39 @@ document.addEventListener("DOMContentLoaded", () => {
    * フォームへのデータ反映・初期描画
    */
   function populateForm(guest, proxies, existingResp) {
+    // 招待客区分に応じた挨拶文の切り替え
+    const invitationTextElem = document.getElementById("invitationText");
+    if (invitationTextElem) {
+      const cat = (guest && guest.guestCategory ? guest.guestCategory : "-").trim();
+      if (cat === "受付") {
+        invitationTextElem.innerHTML =
+          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
+          "このたび 私たちは結婚式を挙げることとなりました<br>" +
+          "日頃お世話になっております皆様をお招きして<br>" +
+          "ささやかな宴を催したく存じます<br>" +
+          "ご多用中　大変恐縮ですが<br>" +
+          "私共の受付係をお願いしたく　当日はお支度完了の上　12時30分までに　お越しくださいますようお願い申し上げます";
+      } else if (cat === "親族") {
+        invitationTextElem.innerHTML =
+          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
+          "このたび 私たちは結婚式を挙げることとなりました<br>" +
+          "日頃お世話になっております皆様をお招きして<br>" +
+          "ささやかな宴を催したく存じます<br>" +
+          "ご多用中　恐縮でございますが<br>" +
+          "親族様におかれましては　親族紹介にご参加賜りたく<br>" +
+          "当日はお支度完了の上　12時30分までにお越しいただきますよう　お願い申し上げます";
+      } else {
+        // デフォルト (-)
+        invitationTextElem.innerHTML =
+          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
+          "このたび 私たちは結婚式を挙げることとなりました<br>" +
+          "日頃お世話になっております皆様をお招きして<br>" +
+          "ささやかな宴を催したく存じます<br>" +
+          "ご多用中　大変恐縮ですが<br>" +
+          "挙式にもご参列賜りたく　当日は　午後1時までにお越しくださいますようお願い申し上げます";
+      }
+    }
+
     // 氏名・フリガナ (Tokensシートの事前定義値)
     lastNameInput.value = guest.lastName || "";
     firstNameInput.value = guest.firstName || "";

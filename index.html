@@ -101,7 +101,7 @@
         <img src="images/ending.jpg" alt="ご回答ありがとうございました" loading="eager" class="hero-ending-img">
       </div>
 
-      <div class="invitation-text">
+      <div class="invitation-text" id="invitationText">
         皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>
         このたび 私たちは結婚式を挙げることとなりました<br>
         日頃お世話になっております皆様をお招きして<br>
@@ -125,7 +125,16 @@
         </div>
         <div class="info-item">
           <span class="info-label">住所：</span>
-          <span class="info-value" id="venueAddressDisplay">東京都千代田区1-1-1</span>
+          <span class="info-value">
+            <span id="venueAddressDisplay">東京都千代田区1-1-1</span>
+            <a id="venueMapLink" href="#" target="_blank" class="map-link">📍 地図を開く</a>
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">電話：</span>
+          <span class="info-value">
+            <a id="venuePhoneLink" href="tel:0354135533" class="phone-link">03-5413-5533</a>
+          </span>
         </div>
         <div class="info-item">
           <span class="info-label">回答期日：</span>

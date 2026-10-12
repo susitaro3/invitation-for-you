@@ -28,7 +28,7 @@ function createWeddingSheets() {
   var tokensHeaders = [
     'Token', 'LastName', 'FirstName', 'KanaLastName', 'KanaFirstName',
     'Side', 'AgeCategory', 'Email', 'Status',
-    'PostalCode', 'Address', 'Building', 'Phone'
+    'PostalCode', 'Address', 'Building', 'Phone', 'GuestCategory'
   ];
   tokensSheet.appendRow(tokensHeaders);
   formatHeaderRow(tokensSheet, tokensHeaders.length, '#3a506b');
@@ -37,12 +37,12 @@ function createWeddingSheets() {
   tokensSheet.appendRow([
     'sample-guest-01', '山田', '太郎', 'やまだ', 'たろう',
     '新郎側', '大人', 'yamada@example.com', '未回答',
-    '', '', '', ''
+    '', '', '', '', '-'
   ]);
   tokensSheet.appendRow([
     'sample-guest-02', '佐藤', '花子', 'さとう', 'はなこ',
     '新婦側', '大人', 'sato@example.com', '未回答',
-    '', '', '', ''
+    '', '', '', '', '-'
   ]);
 
   // 2. PredefinedProxies シートの生成・初期化
@@ -330,11 +330,15 @@ function doGet(e) {
     var colAddress = (tokenMap['address'] || 11) - 1;
     var colBuilding = (tokenMap['building'] || 12) - 1;
     var colPhone = (tokenMap['phone'] || 13) - 1;
+    var colGuestCategory = (tokenMap['guestcategory'] || tokenMap['招待客区分'] || 14) - 1;
 
     // ヘッダー行(0)をスキップしてTokens検索
     for (var i = 1; i < tokenData.length; i++) {
       var row = tokenData[i];
       if (row[colToken] && row[colToken].toString().trim() === token.trim()) {
+        var rawCat = row[colGuestCategory] ? row[colGuestCategory].toString().trim() : '';
+        var guestCat = (rawCat === '親族' || rawCat === '受付') ? rawCat : '-';
+
         guestInfo = {
           token: row[colToken].toString().trim(),
           lastName: row[colLastName] ? row[colLastName].toString() : '',
@@ -348,7 +352,8 @@ function doGet(e) {
           postalCode: row[colPostal] ? row[colPostal].toString() : '',
           address: row[colAddress] ? row[colAddress].toString() : '',
           building: row[colBuilding] ? row[colBuilding].toString() : '',
-          phone: row[colPhone] ? row[colPhone].toString() : ''
+          phone: row[colPhone] ? row[colPhone].toString() : '',
+          guestCategory: guestCat
         };
         break;
       }
