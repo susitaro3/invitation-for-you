@@ -195,7 +195,8 @@ function generateTokensFromNames() {
   }
 
   var updatedCount = 0;
-  var salt = 'wedding_token_salt_2026';
+  var scriptProps = PropertiesService.getScriptProperties();
+  var salt = scriptProps.getProperty('MY_SECURE_API_KEY') || 'wedding_token_salt_2026';
 
   for (var r = 1; r < tokenData.length; r++) {
     var rowLn = tokenData[r][colLastName - 1] ? tokenData[r][colLastName - 1].toString().trim() : '';
