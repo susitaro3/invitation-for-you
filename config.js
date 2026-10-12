@@ -4,7 +4,7 @@
  */
 window.WEDDING_CONFIG = {
   // Google Apps Script Web App URL (/exec)
-  apiUrl: 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxHN0T2Sb5xodoQ4Yj6g7jNG22lNzbUJ5LsS0SD5aBJNDJIgmMzOfy2SAArz0JwembxlQ/exec',
 
   // 式場・イベント基本情報 (GASから読み込めない場合のフォールバック値)
   groom: '小泉竜馬',
