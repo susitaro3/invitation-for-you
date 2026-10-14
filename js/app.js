@@ -18,6 +18,12 @@ if (initialToken && typeof CONFIG !== "undefined" && CONFIG.GAS_WEB_APP_URL && !
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // ブラウザのスクロール位置自動復元を無効化し、常に最上部から表示
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+  window.scrollTo(0, 0);
+
   // DOM Elements
   const loadingContainer = document.getElementById("loadingContainer");
   const errorCard = document.getElementById("errorCard");
@@ -135,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById("openingOverlay");
     const container = document.getElementById("envelopeContainer");
     const btnOpen = document.getElementById("btnOpenInvitation");
+    const waxSeal = document.getElementById("waxSeal") || document.querySelector(".wax-seal");
     if (!overlay || !container || !btnOpen) return;
 
     let isOpening = false;
@@ -142,6 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function openEnvelope() {
       if (isOpening) return;
       isOpening = true;
+
+      // 開封処理開始時に最上部へスクロール
+      window.scrollTo(0, 0);
 
       // ステップ1: 封筒フラップが開き、手紙カードが飛び出す (0ms)
       container.classList.add("open");
@@ -154,11 +164,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // ステップ3: 1.8秒後、手紙カードが画面全体を覆った状態でオーバーレイをフェード接続 (1800ms)
       setTimeout(() => {
         overlay.classList.add("closed");
+        window.scrollTo(0, 0);
       }, 1800);
     }
 
-    // ★ ボタン押下必須（自動タイマー・画面背景タップでの勝手な遷移は行いません）
+    // ★ ボタン押下またはシーリングワックス直接タップで開封アニメーションを起動
     btnOpen.addEventListener("click", openEnvelope);
+    if (waxSeal) {
+      waxSeal.addEventListener("click", openEnvelope);
+    }
   }
 
   /**
