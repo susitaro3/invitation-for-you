@@ -166,8 +166,12 @@ body {
   align-items: center;
   justify-content: center;
   border: none;
-  transition: opacity 0.4s ease;
-  filter: drop-shadow(0 4px 10px rgba(92, 6, 19, 0.4));
+  cursor: pointer;
+  transition: opacity 0.4s ease, transform 0.2s ease;
+}
+
+.wax-seal:hover {
+  transform: translateX(-50%) scale(1.05);
 }
 
 .wax-seal-img {
