@@ -155,19 +155,19 @@ body {
 /* 封かんワックスシール */
 .wax-seal {
   position: absolute;
-  bottom: 12px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 46px;
-  height: 46px;
+  width: 54px;
+  height: 54px;
   background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.35);
   border: none;
   transition: opacity 0.4s ease;
+  filter: drop-shadow(0 4px 10px rgba(92, 6, 19, 0.4));
 }
 
 .wax-seal-img {
