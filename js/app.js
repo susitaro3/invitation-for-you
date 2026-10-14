@@ -1204,6 +1204,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * iOS LINE内蔵ブラウザ判定ヘルパー
+   */
+  function isIosLineBrowser() {
+    const ua = navigator.userAgent || "";
+    return /iPhone|iPad|iPod/i.test(ua) && /Line/i.test(ua);
+  }
+
+  /**
    * Googleカレンダー追加リンク生成
    */
   function handleGoogleCalendarClick() {
@@ -1221,8 +1229,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const details = encodeURIComponent(`【結婚式のご案内】\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\n場所: ${CONFIG.VENUE_NAME}\n住所: ${CONFIG.VENUE_ADDRESS}`);
     const location = encodeURIComponent(`${CONFIG.VENUE_NAME} ${CONFIG.VENUE_ADDRESS}`);
 
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-    window.open(url, "_blank");
+    const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+
+    // iOS LINE内蔵ブラウザの場合は LINE公式スキームで Safari へ受け渡し (ブロック回避)
+    if (isIosLineBrowser()) {
+      window.location.href = `https://line.me/R/app/browser/open?url=${encodeURIComponent(gcalUrl)}`;
+    } else {
+      window.open(gcalUrl, "_blank");
+    }
   }
 
   /**
@@ -1231,7 +1245,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleAppleCalendarClick() {
     if (typeof CONFIG !== "undefined" && CONFIG.GAS_WEB_APP_URL && !CONFIG.GAS_WEB_APP_URL.includes("YOUR_SCRIPT_ID")) {
       const icsUrl = `${CONFIG.GAS_WEB_APP_URL}?action=ics`;
-      window.location.href = icsUrl;
+
+      // iOS LINE内蔵ブラウザの場合は LINE公式スキームで Safari へ受け渡して標準カレンダー起動
+      if (isIosLineBrowser()) {
+        window.location.href = `https://line.me/R/app/browser/open?url=${encodeURIComponent(icsUrl)}`;
+      } else {
+        window.location.href = icsUrl;
+      }
       return;
     }
 
