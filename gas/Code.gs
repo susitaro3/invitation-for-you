@@ -528,13 +528,24 @@ function handleIcsCalendarDownload() {
   var venueName = scriptProps.getProperty('VENUE_NAME') || 'カサデアンジェラ青山';
   var venueAddress = scriptProps.getProperty('VENUE_ADDRESS') || '東京都港区南青山2-22-16';
 
+  var eventStart = scriptProps.getProperty('EVENT_START') || '2027-02-11T13:00:00+09:00';
+  var eventEnd = scriptProps.getProperty('EVENT_END') || '2027-02-11T17:00:00+09:00';
+
   var title = groomName + ' & ' + brideName + ' 結婚式・披露宴';
   var details = '【結婚式のご案内】\\n日時: ' + weddingDate + ' ' + receptionTime + '\\n場所: ' + venueName + '\\n住所: ' + venueAddress;
 
-  // JST (UTC+9) 2027-02-11 13:00 = UTC 2027-02-11 04:00
-  // JST (UTC+9) 2027-02-11 17:00 = UTC 2027-02-11 08:00
-  var startStr = '20270211T040000Z';
-  var endStr = '20270211T080000Z';
+  function parseIsoToUtcStr(isoStr, fallbackStr) {
+    try {
+      var d = new Date(isoStr);
+      if (!isNaN(d.getTime())) {
+        return Utilities.formatDate(d, 'UTC', "yyyyMMdd'T'HHmmss'Z'");
+      }
+    } catch (e) {}
+    return fallbackStr;
+  }
+
+  var startStr = parseIsoToUtcStr(eventStart, '20270211T040000Z');
+  var endStr = parseIsoToUtcStr(eventEnd, '20270211T080000Z');
   var nowStr = Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'");
 
   var icsContent = [

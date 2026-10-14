@@ -1209,8 +1209,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleGoogleCalendarClick() {
     if (typeof CONFIG === "undefined") return;
     const title = encodeURIComponent(`${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`);
-    const start = CONFIG.EVENT_START ? CONFIG.EVENT_START.replace(/[-:]/g, "") : "20270211T130000Z";
-    const end = CONFIG.EVENT_END ? CONFIG.EVENT_END.replace(/[-:]/g, "") : "20270211T170000Z";
+
+    function toUtcIso(isoStr) {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return "20270211T040000Z";
+      return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    }
+
+    const start = toUtcIso(CONFIG.EVENT_START || "2027-02-11T13:00:00+09:00");
+    const end = toUtcIso(CONFIG.EVENT_END || "2027-02-11T17:00:00+09:00");
     const details = encodeURIComponent(`【結婚式のご案内】\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\n場所: ${CONFIG.VENUE_NAME}\n住所: ${CONFIG.VENUE_ADDRESS}`);
     const location = encodeURIComponent(`${CONFIG.VENUE_NAME} ${CONFIG.VENUE_ADDRESS}`);
 
