@@ -517,6 +517,9 @@ body {
   line-height: 2;
   margin-bottom: 30px;
   text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-break: strict;
 }
 
 .info-box {
@@ -665,6 +668,34 @@ body {
    -------------------------------------------------------------------------- */
 .form-group {
   margin-bottom: 22px;
+}
+
+.calendar-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calendar-btn {
+  font-family: var(--font-serif);
+  font-size: var(--fz-sub);
+  color: var(--primary-color);
+  background-color: #fff;
+  border: 1px solid var(--primary-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendar-btn:hover {
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.3);
 }
 
 .form-group:last-child {

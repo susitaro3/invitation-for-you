@@ -37,12 +37,17 @@ function createWeddingSheets() {
   tokensSheet.appendRow([
     'sample-guest-01', '山田', '太郎', 'やまだ', 'たろう',
     '新郎側', '大人', 'yamada@example.com', '未回答',
-    '', '', '', '', '-'
+    '1000001', '東京都千代田区1-1-1', '千代田ビル 101', '09012345678', '-'
   ]);
   tokensSheet.appendRow([
-    'sample-guest-02', '佐藤', '花子', 'さとう', 'はなこ',
-    '新婦側', '大人', 'sato@example.com', '未回答',
-    '', '', '', '', '-'
+    'sample-guest-reception', '鈴木', '一郎', 'すずき', 'いちろう',
+    '新郎側', '大人', 'suzuki@example.com', '未回答',
+    '1500002', '東京都渋谷区2-2-2', '', '09087654321', '受付'
+  ]);
+  tokensSheet.appendRow([
+    'sample-guest-relative', '高橋', '次郎', 'たかはし', 'じろう',
+    '新婦側', '大人', 'takahashi@example.com', '未回答',
+    '1600003', '東京都新宿区3-3-3', '新宿ハイツ 302', '09011112222', '親族'
   ]);
 
   // 2. PredefinedProxies シートの生成・初期化
@@ -69,6 +74,11 @@ function createWeddingSheets() {
   proxySheet.appendRow([
     'proxy-sample-02', 'sample-guest-01', '山田', '一郎', 'やまだ', 'いちろう',
     '新郎側', '子供', '', '未回答', '',
+    'はい', '', '', '', ''
+  ]);
+  proxySheet.appendRow([
+    'proxy-relative-01', 'sample-guest-relative', '高橋', '美子', 'たかはし', 'よしこ',
+    '新婦側', '大人', 'yoshiko@example.com', '未回答', '卵アレルギー',
     'はい', '', '', '', ''
   ]);
 
@@ -687,12 +697,24 @@ function sendConfirmationEmail(payload) {
   var firstName = payload.firstName || '';
   var guestName = (lastName + ' ' + firstName).trim();
 
-  var groomName = '新郎 太郎';
-  var brideName = '新婦 花子';
-  var weddingDate = '2026年10月10日（土）';
+  var groomName = '小泉 竜馬';
+  var brideName = '大西 美保夏';
+  var weddingDate = '2027年2月11日（木）';
   var receptionTime = '開場 11:30 / 挙式 12:00 / 披露宴 13:00';
-  var venueName = 'グランドホテル東京 鳳凰の間';
-  var venueAddress = '東京都千代田区1-1-1';
+  var venueName = 'カサデアンジェラ青山';
+  var venueAddress = '東京都港区南青山2-23-18';
+
+  // 編集・確認用URLの生成 (スクリプトプロパティ FRONTEND_URL から取得、未設定時は案内プレースホルダー表示)
+  var scriptProps = PropertiesService.getScriptProperties();
+  var frontendBaseUrl = scriptProps.getProperty('FRONTEND_URL') || '';
+  var editUrl = '';
+  if (payload.token) {
+    if (frontendBaseUrl) {
+      editUrl = frontendBaseUrl.replace(/\/$/, '') + '/?token=' + encodeURIComponent(payload.token);
+    } else {
+      editUrl = '（※スクリプトプロパティ「FRONTEND_URL」に公開URLを設定するとここに表示されます。例: https://<your-username>.github.io/<repo>/?token=' + encodeURIComponent(payload.token) + '）';
+    }
+  }
 
   var title = '【ご回答完了】結婚式のご案内 - ' + groomName + ' & ' + brideName;
 
@@ -729,8 +751,15 @@ function sendConfirmationEmail(payload) {
     '・時間：' + receptionTime + '\n' +
     '・場所：' + venueName + '\n' +
     '・住所：' + venueAddress + '\n' +
-    '--------------------------------------------------\n\n' +
-    '皆様にお会いできますことを、心より楽しみにしております。\n\n' +
+    '--------------------------------------------------\n';
+
+  if (editUrl) {
+    body += '\n【回答の確認・修正について】\n' +
+      'ご回答内容を変更される場合は、以下の専用URLより再度アクセスしていつでも修正いただけます。\n' +
+      editUrl + '\n\n';
+  }
+
+  body += '皆様にお会いできますことを、心より楽しみにしております。\n\n' +
     groomName + ' & ' + brideName;
 
   // ご指示の通り MailApp.sendEmail(sendto, title, body) を直接使用

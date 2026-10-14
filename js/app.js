@@ -113,6 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // モーダル送信実行ボタン
   btnModalSubmit.addEventListener("click", handleFormSubmit);
 
+  // カレンダー追加ボタン
+  const btnGoogleCalendar = document.getElementById("btnGoogleCalendar");
+  const btnAppleCalendar = document.getElementById("btnAppleCalendar");
+  if (btnGoogleCalendar) {
+    btnGoogleCalendar.addEventListener("click", handleGoogleCalendarClick);
+  }
+  if (btnAppleCalendar) {
+    btnAppleCalendar.addEventListener("click", handleAppleCalendarClick);
+  }
+
 
   // ==========================================================================
   // 関数定義
@@ -1158,5 +1168,69 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  /**
+   * Googleカレンダー追加リンク生成
+   */
+  function handleGoogleCalendarClick() {
+    if (typeof CONFIG === "undefined") return;
+    const title = encodeURIComponent(`${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`);
+    const start = CONFIG.EVENT_START ? CONFIG.EVENT_START.replace(/[-:]/g, "") : "20270211T130000Z";
+    const end = CONFIG.EVENT_END ? CONFIG.EVENT_END.replace(/[-:]/g, "") : "20270211T170000Z";
+    const details = encodeURIComponent(`【結婚式のご案内】\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\n場所: ${CONFIG.VENUE_NAME}\n住所: ${CONFIG.VENUE_ADDRESS}`);
+    const location = encodeURIComponent(`${CONFIG.VENUE_NAME} ${CONFIG.VENUE_ADDRESS}`);
+
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+    window.open(url, "_blank");
+  }
+
+  /**
+   * Apple / Outlook カレンダー (.ics) ファイルダウンロード
+   */
+  function handleAppleCalendarClick() {
+    if (typeof CONFIG === "undefined") return;
+    const title = `${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`;
+    const start = CONFIG.EVENT_START || "2027-02-11T13:00:00+09:00";
+    const end = CONFIG.EVENT_END || "2027-02-11T17:00:00+09:00";
+    const venue = CONFIG.VENUE_NAME || "";
+    const address = CONFIG.VENUE_ADDRESS || "";
+    const details = `【結婚式のご案内】\\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\\n場所: ${venue}\\n住所: ${address}`;
+
+    function formatIcsDate(isoStr) {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return "20270211T040000Z";
+      return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    }
+
+    const startStr = formatIcsDate(start);
+    const endStr = formatIcsDate(end);
+    const nowStr = formatIcsDate(new Date().toISOString());
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Wedding Invitation//JA",
+      "BEGIN:VEVENT",
+      `UID:wedding-${Date.now()}@invitation`,
+      `DTSTAMP:${nowStr}`,
+      `DTSTART:${startStr}`,
+      `DTEND:${endStr}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${details}`,
+      `LOCATION:${venue} ${address}`,
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "wedding-invitation.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 });
