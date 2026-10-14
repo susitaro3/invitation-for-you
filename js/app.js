@@ -70,10 +70,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let guestData = null;
   let predefinedProxiesList = [];
 
-  // 1. 全画面オープニング起動、CONFIG情報でヘッダーテキストを初期化 & ヒーローフォトギャラリー起動
+  // 1. 全画面オープニング起動、CONFIG情報でヘッダーテキストを初期化、全画像プリロード & ヒーローフォトギャラリー起動
   initOpeningOverlay();
   initHeaderInfo();
   initHeroSlider();
+  preloadGalleryImages();
 
   // 2. URLパラメータからトークンを取得
   currentToken = initialToken || getTokenFromURL();
@@ -297,6 +298,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     startTimer();
+  }
+
+  /**
+   * ギャラリー全画像およびお礼画像の全画面バックグラウンド・プリロード関数
+   */
+  function preloadGalleryImages() {
+    const imagesToPreload = [
+      "images/FJI_6409.jpg",
+      "images/FJI_6424.jpg",
+      "images/FJI_6456.jpg",
+      "images/ending.jpg",
+      "images/wax-seal.svg",
+      "images/wedding-icon.svg"
+    ];
+    imagesToPreload.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
   }
 
   /**
@@ -1200,10 +1219,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Apple / Outlook カレンダー (.ics) ファイルダウンロード
+   * Apple / Outlook カレンダー (.ics) ファイルダウンロード (iOS LINE内蔵ブラウザ完全対応)
    */
   function handleAppleCalendarClick() {
-    if (typeof CONFIG === "undefined") return;
+    if (typeof CONFIG !== "undefined" && CONFIG.GAS_WEB_APP_URL && !CONFIG.GAS_WEB_APP_URL.includes("YOUR_SCRIPT_ID")) {
+      const icsUrl = `${CONFIG.GAS_WEB_APP_URL}?action=ics`;
+      window.location.href = icsUrl;
+      return;
+    }
+
+    // フォールバック: クライアントサイド Blob 生成
     const title = `${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`;
     const start = CONFIG.EVENT_START || "2027-02-11T13:00:00+09:00";
     const end = CONFIG.EVENT_END || "2027-02-11T17:00:00+09:00";

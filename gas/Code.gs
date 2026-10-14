@@ -306,6 +306,11 @@ function getActiveSheetValues(sheet) {
 function doGet(e) {
   var callback = e && e.parameter ? e.parameter.callback : null;
 
+  // 🚀 iOS LINE内蔵ブラウザ対応: iCal (.ics) カレンダーファイルダイレクト配信
+  if (e && e.parameter && e.parameter.action === 'ics') {
+    return handleIcsCalendarDownload();
+  }
+
   // 🚀 サーバーサイド郵便番号住所検索アクション (CORS完全回避)
   if (e && e.parameter && e.parameter.action === 'postal') {
     var searchZip = e.parameter.zip ? e.parameter.zip.replace(/[^\d]/g, '') : '';
@@ -512,6 +517,49 @@ function handlePostalCodeSearch(zip, callback) {
 }
 
 /**
+ * 🚀 iOS LINE内蔵ブラウザ対応: サーバーからダイレクトに.icsファイルを返却する関数
+ */
+function handleIcsCalendarDownload() {
+  var scriptProps = PropertiesService.getScriptProperties();
+  var groomName = scriptProps.getProperty('GROOM_NAME') || '小泉 竜馬';
+  var brideName = scriptProps.getProperty('BRIDE_NAME') || '大西 美保夏';
+  var weddingDate = scriptProps.getProperty('WEDDING_DATE') || '2027年2月11日（木）';
+  var receptionTime = scriptProps.getProperty('RECEPTION_TIME') || '開場 13:00 / 挙式 13:30 / 披露宴 14:15~16:45';
+  var venueName = scriptProps.getProperty('VENUE_NAME') || 'カサデアンジェラ青山';
+  var venueAddress = scriptProps.getProperty('VENUE_ADDRESS') || '東京都港区南青山2-22-16';
+
+  var title = groomName + ' & ' + brideName + ' 結婚式・披露宴';
+  var details = '【結婚式のご案内】\\n日時: ' + weddingDate + ' ' + receptionTime + '\\n場所: ' + venueName + '\\n住所: ' + venueAddress;
+
+  // JST (UTC+9) 2027-02-11 13:00 = UTC 2027-02-11 04:00
+  // JST (UTC+9) 2027-02-11 17:00 = UTC 2027-02-11 08:00
+  var startStr = '20270211T040000Z';
+  var endStr = '20270211T080000Z';
+  var nowStr = Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'");
+
+  var icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Wedding Invitation//JA',
+    'BEGIN:VEVENT',
+    'UID:wedding-' + new Date().getTime() + '@invitation',
+    'DTSTAMP:' + nowStr,
+    'DTSTART:' + startStr,
+    'DTEND:' + endStr,
+    'SUMMARY:' + title,
+    'DESCRIPTION:' + details,
+    'LOCATION:' + venueName + ' ' + venueAddress,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  var output = ContentService.createTextOutput(icsContent);
+  output.setMimeType(ContentService.MimeType.TEXT);
+  output.downloadAsFile('wedding-invitation.ics');
+  return output;
+}
+
+/**
  * 🔒 当日の特定のトークンによる回答・更新送信回数をカウントする関数 (1日20回制限用)
  */
 function getTodaySubmissionCount(responseSheet, token) {
@@ -691,21 +739,23 @@ function doPost(e) {
 function sendConfirmationEmail(payload) {
   if (!payload || !payload.email || !payload.email.trim()) return 'No recipient email specified';
 
+  var scriptProps = PropertiesService.getScriptProperties();
+
   var sendto = payload.email.trim();
   var attendanceStatus = payload.attendance || '未回答';
   var lastName = payload.lastName || '';
   var firstName = payload.firstName || '';
   var guestName = (lastName + ' ' + firstName).trim();
 
-  var groomName = '小泉 竜馬';
-  var brideName = '大西 美保夏';
-  var weddingDate = '2027年2月11日（木）';
-  var receptionTime = '開場 11:30 / 挙式 12:00 / 披露宴 13:00';
-  var venueName = 'カサデアンジェラ青山';
-  var venueAddress = '東京都港区南青山2-23-18';
+  // 各種設定値（スクリプトプロパティで柔軟に変更可能・未設定時はデフォルト値を使用）
+  var groomName = scriptProps.getProperty('GROOM_NAME') || '小泉 竜馬';
+  var brideName = scriptProps.getProperty('BRIDE_NAME') || '大西 美保夏';
+  var weddingDate = scriptProps.getProperty('WEDDING_DATE') || '2027年2月11日（木）';
+  var receptionTime = scriptProps.getProperty('RECEPTION_TIME') || '開場 13:00 / 挙式 13:30 / 披露宴 14:15~16:45';
+  var venueName = scriptProps.getProperty('VENUE_NAME') || 'カサデアンジェラ青山';
+  var venueAddress = scriptProps.getProperty('VENUE_ADDRESS') || '東京都港区南青山2-22-16';
 
-  // 編集・確認用URLの生成 (スクリプトプロパティ FRONTEND_URL から取得、未設定時は案内プレースホルダー表示)
-  var scriptProps = PropertiesService.getScriptProperties();
+  // 編集・確認用URLの生成
   var frontendBaseUrl = scriptProps.getProperty('FRONTEND_URL') || '';
   var editUrl = '';
   if (payload.token) {
@@ -716,11 +766,13 @@ function sendConfirmationEmail(payload) {
     }
   }
 
-  var title = '【ご回答完了】結婚式のご案内 - ' + groomName + ' & ' + brideName;
+  // 件名および文章テンプレート（スクリプトプロパティでカスタム可）
+  var title = scriptProps.getProperty('EMAIL_TITLE') || ('【ご回答完了】結婚式のご案内 - ' + groomName + ' & ' + brideName);
+  var headerMsg = scriptProps.getProperty('EMAIL_HEADER_MSG') || 'このたびはWeb招待状のご回答をいただき、誠にありがとうございます。\n送信いただきましたご回答内容を下記の通りお受けいたしました。';
+  var footerMsg = scriptProps.getProperty('EMAIL_FOOTER_MSG') || '皆様にお会いできますことを、心より楽しみにしております。';
 
   var body = guestName + ' 様\n\n' +
-    'このたびはWeb招待状のご回答をいただき、誠にありがとうございます。\n' +
-    '送信いただきましたご回答内容を下記の通りお受けいたしました。\n\n' +
+    headerMsg + '\n\n' +
     '--------------------------------------------------\n' +
     '【ご回答内容】\n' +
     '・ご出欠：' + attendanceStatus + '\n' +
@@ -759,8 +811,7 @@ function sendConfirmationEmail(payload) {
       editUrl + '\n\n';
   }
 
-  body += '皆様にお会いできますことを、心より楽しみにしております。\n\n' +
-    groomName + ' & ' + brideName;
+  body += footerMsg + '\n\n' + groomName + ' & ' + brideName;
 
   // ご指示の通り MailApp.sendEmail(sendto, title, body) を直接使用
   try {
