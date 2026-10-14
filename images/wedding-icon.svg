@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- 黄金グラデーション (背景シール) -->
+    <radialGradient id="sealBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff8f0"/>
+      <stop offset="60%" stop-color="#f4ede2"/>
+      <stop offset="100%" stop-color="#e8d8c3"/>
+    </radialGradient>
+
+    <!-- リッチゴールドグラデーション -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f9f0d0"/>
+      <stop offset="30%" stop-color="#e2c178"/>
+      <stop offset="70%" stop-color="#c5a059"/>
+      <stop offset="100%" stop-color="#9a7736"/>
+    </linearGradient>
+
+    <!-- ダイヤモンド輝きグラデーション -->
+    <radialGradient id="diamondGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#e0f7fa"/>
+      <stop offset="100%" stop-color="#b2ebf2"/>
+    </radialGradient>
+
+    <!-- シャドウフィルター -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#8a6d3b" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- 外枠サークル（シーリングワックス風） -->
+  <circle cx="256" cy="256" r="236" fill="url(#sealBg)" stroke="url(#goldGrad)" stroke-width="12" filter="url(#softShadow)"/>
+  <circle cx="256" cy="256" r="216" fill="none" stroke="url(#goldGrad)" stroke-width="2" stroke-dasharray="6 6"/>
+
+  <!-- 月桂樹・ローレルリーフ (フレーム装飾) -->
+  <g fill="url(#goldGrad)" opacity="0.85">
+    <!-- 左ローレル -->
+    <path d="M 120 280 C 100 220 120 160 160 120 C 150 140 145 170 155 200 C 140 180 130 150 140 120 C 120 150 115 190 130 230 C 115 210 110 180 120 150 C 105 185 105 225 120 260 C 110 240 108 210 118 180 C 100 215 105 255 120 280 Z"/>
+    <!-- 右ローレル -->
+    <path d="M 392 280 C 412 220 392 160 352 120 C 362 140 367 170 357 200 C 372 180 382 150 372 120 C 392 150 397 190 382 230 C 397 210 402 180 392 150 C 407 185 407 225 392 260 C 402 240 404 210 394 180 C 412 215 407 255 392 280 Z"/>
+  </g>
+
+  <!-- 2つの交差する結婚指輪 (Interlocking Wedding Rings) -->
+  <g filter="url(#softShadow)">
+    <!-- 左のリング（女性用） -->
+    <circle cx="210" cy="256" r="72" fill="none" stroke="url(#goldGrad)" stroke-width="22"/>
+
+    <!-- 右のリング（男性用） -->
+    <circle cx="302" cy="256" r="72" fill="none" stroke="url(#goldGrad)" stroke-width="22"/>
+
+    <!-- リングの交差部オーバーラップ描画 (立体感) -->
+    <path d="M 252 192 A 72 72 0 0 1 270 230" fill="none" stroke="url(#goldGrad)" stroke-width="22" stroke-linecap="round"/>
+  </g>
+
+  <!-- ダイヤモンド（左リング頂点） -->
+  <g transform="translate(210, 172)">
+    <!-- ダイヤ輝き線 -->
+    <path d="M 0 -30 L 0 30 M -30 0 L 30 0 M -20 -20 L 20 20 M -20 20 L 20 -20" stroke="url(#goldGrad)" stroke-width="3" opacity="0.8"/>
+    <!-- ダイヤ本体 -->
+    <polygon points="0,-18 14,-6 0,16 -14,-6" fill="url(#diamondGlow)" stroke="url(#goldGrad)" stroke-width="3"/>
+  </g>
+
+  <!-- 中央上部のミニハート -->
+  <path d="M 256 126 C 256 118 246 108 236 114 C 224 122 236 138 256 150 C 276 138 288 122 276 114 C 266 108 256 118 256 126 Z" fill="url(#goldGrad)"/>
+
+  <!-- リボン / テキスト装飾 -->
+  <path d="M 160 380 Q 256 410 352 380 Q 256 395 160 380 Z" fill="url(#goldGrad)"/>
+</svg>
