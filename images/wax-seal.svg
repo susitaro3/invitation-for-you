@@ -30,14 +30,14 @@
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0.35"/>
     </radialGradient>
 
-    <!-- 柔らかいドロップシャドウ -->
-    <filter id="waxShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="1" dy="4" stdDeviation="4.5" flood-color="#7a5f4c" flood-opacity="0.3"/>
+    <!-- 極めて控えめでソフトな質感シャドウ -->
+    <filter id="subtleWaxShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="2.5" stdDeviation="2.5" flood-color="#6e503c" flood-opacity="0.15"/>
     </filter>
   </defs>
 
-  <!-- 溶けたワックスの波打つ自然で肉厚な輪郭 (Realistic Organic Melted Wax Silhouette) -->
-  <path filter="url(#waxShadow)" fill="url(#waxGrad)" d="
+  <!-- 溶けたワックスの波打つ自然で肉厚な輪郭 (極控えめな影を適用) -->
+  <path filter="url(#subtleWaxShadow)" fill="url(#waxGrad)" d="
     M 152 12
     C 178 10, 198 22, 222 28
     C 245 35, 272 48, 282 72
@@ -53,7 +53,7 @@
     C 125 15, 138 13, 152 12
     Z" />
 
-  <!-- 外縁のワックス盛り上がり（立体的な肉厚感ハイライト） -->
+  <!-- 外縁のワックス盛り上がり -->
   <path fill="url(#edgeGlow)" d="
     M 152 12
     C 178 10, 198 22, 222 28
@@ -91,7 +91,7 @@
       M 68 10 C 72 -20, 50 -55, 20 -68 C 25 -52, 22 -35, 30 -20 Z" />
 
     <!-- ダイヤモンドモチーフ (立体カット) -->
-    <g filter="drop-shadow(0 1px 3px rgba(110,80,60,0.3))">
+    <g filter="drop-shadow(0 0.8px 1.5px rgba(110,80,60,0.2))">
       <!-- ダイヤ外枠ファセット -->
       <polygon points="0,-32 26,-10 0,36 -26,-10" fill="url(#stampGold)" stroke="#8a6d3b" stroke-width="1.2"/>
       <!-- ダイヤ天面ファセット -->
