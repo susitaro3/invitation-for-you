@@ -124,11 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("envelopeContainer");
     const btnOpen = document.getElementById("btnOpenInvitation");
     const waxSeal = document.getElementById("waxSeal") || document.querySelector(".wax-seal");
-    if (!overlay || !container || !btnOpen) return;
+    if (!overlay || !container) return;
 
     let isOpening = false;
 
-    function openEnvelope() {
+    function openEnvelope(e) {
+      if (e) e.stopPropagation();
       if (isOpening) return;
       isOpening = true;
 
@@ -146,15 +147,17 @@ document.addEventListener("DOMContentLoaded", () => {
       // ステップ3: 1.8秒後、手紙カードが画面全体を覆った状態でオーバーレイをフェード接続 (1800ms)
       setTimeout(() => {
         overlay.classList.add("closed");
+        setTimeout(() => {
+          overlay.style.display = "none";
+        }, 1200);
         window.scrollTo(0, 0);
       }, 1800);
     }
 
-    // ★ ボタン押下またはシーリングワックス直接タップで開封アニメーションを起動
-    btnOpen.addEventListener("click", openEnvelope);
-    if (waxSeal) {
-      waxSeal.addEventListener("click", openEnvelope);
-    }
+    // ★ ボタン押下、シーリングワックス、または封筒コンテナ全体のタップで開封アニメーションを起動
+    if (btnOpen) btnOpen.addEventListener("click", openEnvelope);
+    if (waxSeal) waxSeal.addEventListener("click", openEnvelope);
+    container.addEventListener("click", openEnvelope);
   }
 
   /**
@@ -400,16 +403,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 2. 早割り通信で取得できなかった場合は標準 fetch を試行
+    // 2. 早割り通信で取得できなかった場合は標準 fetch (4秒タイムアウト保護付き) を試行
     if (!result) {
       const baseUrl = `${CONFIG.GAS_WEB_APP_URL}?token=${encodeURIComponent(token)}`;
       try {
-        const response = await fetch(baseUrl);
-        if (response.ok) {
-          result = await response.json();
-        }
+        result = await fetchWithTimeout(baseUrl, 4000);
       } catch (e) {
-        console.warn("Standard fetch failed (CORS block), trying JSONP fallback...", e);
+        console.warn("Standard fetch failed or timed out (CORS block), trying JSONP fallback...", e);
       }
     }
 
