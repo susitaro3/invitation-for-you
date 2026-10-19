@@ -51,9 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const kanaFirstNameInput = document.getElementById("kanaFirstName");
   const ageCategorySelect = document.getElementById("ageCategory");
   const emailInput = document.getElementById("email");
-  const postalCodeInput = document.getElementById("postalCode");
-  const addressInput = document.getElementById("address");
-  const buildingInput = document.getElementById("building");
   const phoneInput = document.getElementById("phone");
   const allergiesInput = document.getElementById("allergies");
   const messageInput = document.getElementById("message");
@@ -98,12 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 主出席者の住所入力変更時に「主出席者と同じ住所」選択済みの代理出席者カードへリアルタイム連動同期
-  postalCodeInput.addEventListener("input", syncAddressesToSameAddressProxies);
-  addressInput.addEventListener("input", syncAddressesToSameAddressProxies);
-  buildingInput.addEventListener("input", syncAddressesToSameAddressProxies);
-  phoneInput.addEventListener("input", syncAddressesToSameAddressProxies);
-
   // 同伴者様追加ボタン
   if (btnAddProxy) {
     btnAddProxy.addEventListener("click", handleAddDynamicProxy);
@@ -119,16 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // モーダル送信実行ボタン
   btnModalSubmit.addEventListener("click", handleFormSubmit);
-
-  // カレンダー追加ボタン
-  const btnGoogleCalendar = document.getElementById("btnGoogleCalendar");
-  const btnAppleCalendar = document.getElementById("btnAppleCalendar");
-  if (btnGoogleCalendar) {
-    btnGoogleCalendar.addEventListener("click", handleGoogleCalendarClick);
-  }
-  if (btnAppleCalendar) {
-    btnAppleCalendar.addEventListener("click", handleAppleCalendarClick);
-  }
 
 
   // ==========================================================================
@@ -223,6 +204,29 @@ document.addEventListener("DOMContentLoaded", () => {
     if (CONFIG.RESPONSE_DEADLINE) {
       const deadlineElem = document.getElementById("responseDeadlineDisplay");
       if (deadlineElem) deadlineElem.textContent = `${CONFIG.RESPONSE_DEADLINE} まで`;
+    }
+
+    // カレンダー登録リンク (ネイティブ <a> タグ href 自動セット)
+    const btnGCal = document.getElementById("btnGoogleCalendar");
+    if (btnGCal) {
+      function toUtcIso(isoStr) {
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return "20270211T040000Z";
+        return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      }
+      const title = encodeURIComponent(`${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`);
+      const start = toUtcIso(CONFIG.EVENT_START || "2027-02-11T13:00:00+09:00");
+      const end = toUtcIso(CONFIG.EVENT_END || "2027-02-11T17:00:00+09:00");
+      const details = encodeURIComponent(`【結婚式のご案内】\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\n場所: ${CONFIG.VENUE_NAME}\n住所: ${CONFIG.VENUE_ADDRESS}`);
+      const location = encodeURIComponent(`${CONFIG.VENUE_NAME} ${CONFIG.VENUE_ADDRESS}`);
+      btnGCal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+    }
+
+    const btnApple = document.getElementById("btnAppleCalendar");
+    if (btnApple) {
+      if (CONFIG.GAS_WEB_APP_URL && !CONFIG.GAS_WEB_APP_URL.includes("YOUR_SCRIPT_ID")) {
+        btnApple.href = `${CONFIG.GAS_WEB_APP_URL}?action=ics`;
+      }
     }
   }
 
@@ -531,10 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
       emailInput.value = guest.email;
     }
 
-    // 主出席者の住所情報 (Tokensシートより自動初期表示)
-    if (guest.postalCode) postalCodeInput.value = guest.postalCode;
-    if (guest.address) addressInput.value = guest.address;
-    if (guest.building) buildingInput.value = guest.building;
     if (guest.phone) phoneInput.value = guest.phone;
 
     // 事前定義代理出席者アコーディオンカード群の生成 (PredefinedProxiesシート)
@@ -566,9 +566,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (existingResp.kanaLastName) kanaLastNameInput.value = existingResp.kanaLastName;
       if (existingResp.kanaFirstName) kanaFirstNameInput.value = existingResp.kanaFirstName;
       if (existingResp.email) emailInput.value = existingResp.email;
-      if (existingResp.postalCode) postalCodeInput.value = existingResp.postalCode;
-      if (existingResp.address) addressInput.value = existingResp.address;
-      if (existingResp.building) buildingInput.value = existingResp.building;
       if (existingResp.phone) phoneInput.value = existingResp.phone;
       if (existingResp.allergies) allergiesInput.value = existingResp.allergies;
       if (existingResp.message) messageInput.value = existingResp.message;
@@ -580,9 +577,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       toggleAttendanceSections("出席");
     }
-
-    // 初期化完了後に主出席者の住所を「主出席者と同じ住所」設定の同伴者カードへ一度同期
-    syncAddressesToSameAddressProxies();
   }
 
   /**
@@ -590,7 +584,6 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function renderPredefinedProxyAccordionCard(proxy) {
     const isInitiallyAttending = proxy.status !== "欠席";
-    const isSameAddress = proxy.sameAddress !== false; // 初期値: 主出席者と同じ住所 (true)
 
     const card = document.createElement("div");
     card.className = "accordion-card";
@@ -642,33 +635,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <input type="text" class="proxy-allergies" value="${escapeHtml(proxy.allergies || "")}" placeholder="例: えびアレルギー など">
         </div>
 
-        <!-- 住所項目セクション -->
-        <div class="proxy-address-section">
-          <label class="proxy-address-toggle">
-            <input type="checkbox" class="proxy-same-address-cb" ${isSameAddress ? "checked" : ""}>
-            <span>主出席者（ご回答者様）と同じ住所</span>
-          </label>
-
-          <div class="proxy-custom-address-box ${isSameAddress ? "hidden" : ""}">
-            <div class="form-group">
-              <label class="form-label">郵便番号</label>
-              <input type="text" class="proxy-postal" value="${escapeHtml(proxy.postalCode || "")}" placeholder="例: 100-0001" maxlength="8">
-            </div>
-            <div class="form-group">
-              <label class="form-label">住所</label>
-              <input type="text" class="proxy-address" value="${escapeHtml(proxy.address || "")}" placeholder="都道府県・市区町村・番地">
-            </div>
-            <div class="form-group">
-              <label class="form-label">建物名・部屋番号（任意）</label>
-              <input type="text" class="proxy-building" value="${escapeHtml(proxy.building || "")}" placeholder="マンション名 101号室">
-            </div>
-            <div class="form-group">
-              <label class="form-label">電話番号（任意）</label>
-              <input type="tel" class="proxy-phone" value="${escapeHtml(proxy.phone || "")}" placeholder="09012345678">
-            </div>
-          </div>
-        </div>
-
         <!-- 同伴者様の削除ボタン -->
         <div class="accordion-actions">
           <button type="button" class="btn-delete-proxy">この同伴者様を削除</button>
@@ -683,8 +649,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const lastNameIn = card.querySelector(".proxy-last-name");
     const firstNameIn = card.querySelector(".proxy-first-name");
     const ageSelect = card.querySelector(".proxy-age-category");
-    const sameAddressCb = card.querySelector(".proxy-same-address-cb");
-    const customAddressBox = card.querySelector(".proxy-custom-address-box");
     const deleteBtn = card.querySelector(".btn-delete-proxy");
 
     // ヘッダータイトル更新
@@ -719,25 +683,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // 主出席者と同じ住所トグルイベント
-    sameAddressCb.addEventListener("change", (e) => {
-      e.stopPropagation();
-      if (sameAddressCb.checked) {
-        customAddressBox.classList.add("hidden");
-        // 主出席者の住所をコピー
-        card.querySelector(".proxy-postal").value = postalCodeInput.value;
-        card.querySelector(".proxy-address").value = addressInput.value;
-        card.querySelector(".proxy-building").value = buildingInput.value;
-        card.querySelector(".proxy-phone").value = phoneInput.value;
-      } else {
-        customAddressBox.classList.remove("hidden");
-      }
-    });
-
-    sameAddressCb.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-
     // チェックボックスイベント
     cb.addEventListener("change", (e) => {
       e.stopPropagation();
@@ -769,22 +714,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * 主出席者の住所変更時に「主出席者と同じ住所」設定の同伴者カードの住所を連動同期
-   */
-  function syncAddressesToSameAddressProxies() {
-    const cards = predefinedProxyContainer.querySelectorAll(".accordion-card");
-    cards.forEach((card) => {
-      const sameAddressCb = card.querySelector(".proxy-same-address-cb");
-      if (sameAddressCb && sameAddressCb.checked) {
-        card.querySelector(".proxy-postal").value = postalCodeInput.value;
-        card.querySelector(".proxy-address").value = addressInput.value;
-        card.querySelector(".proxy-building").value = buildingInput.value;
-        card.querySelector(".proxy-phone").value = phoneInput.value;
-      }
-    });
-  }
-
-  /**
    * 画面上の全事前定義代理出席者の編集データを抽出する関数
    */
   function getPredefinedProxiesData() {
@@ -803,21 +732,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const age = card.querySelector(".proxy-age-category").value;
       const alg = card.querySelector(".proxy-allergies").value.trim();
 
-      const sameAddressCb = card.querySelector(".proxy-same-address-cb");
-      const isSameAddress = sameAddressCb ? sameAddressCb.checked : true;
-
-      let pPostal = card.querySelector(".proxy-postal").value.trim();
-      let pAddress = card.querySelector(".proxy-address").value.trim();
-      let pBuilding = card.querySelector(".proxy-building").value.trim();
-      let pPhone = card.querySelector(".proxy-phone").value.trim();
-
-      if (isSameAddress) {
-        pPostal = postalCodeInput.value.trim();
-        pAddress = addressInput.value.trim();
-        pBuilding = buildingInput.value.trim();
-        pPhone = phoneInput.value.trim();
-      }
-
       result.push({
         proxyId: proxyId,
         attending: isAttending,
@@ -827,11 +741,6 @@ document.addEventListener("DOMContentLoaded", () => {
         kanaFirstName: kfn,
         ageCategory: age,
         allergies: alg,
-        sameAddress: isSameAddress,
-        postalCode: pPostal,
-        address: pAddress,
-        building: pBuilding,
-        phone: pPhone,
         fullName: `${ln} ${fn}`.trim()
       });
     });
@@ -871,22 +780,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (item.kanaFirstName) card.querySelector(".proxy-kana-first").value = item.kanaFirstName;
             if (item.ageCategory) card.querySelector(".proxy-age-category").value = item.ageCategory;
             if (item.allergies) card.querySelector(".proxy-allergies").value = item.allergies;
-
-            const sameAddressCb = card.querySelector(".proxy-same-address-cb");
-            const customBox = card.querySelector(".proxy-custom-address-box");
-
-            if (sameAddressCb) {
-              sameAddressCb.checked = item.sameAddress !== false;
-              if (sameAddressCb.checked) {
-                if (customBox) customBox.classList.add("hidden");
-              } else {
-                if (customBox) customBox.classList.remove("hidden");
-                if (item.postalCode) card.querySelector(".proxy-postal").value = item.postalCode;
-                if (item.address) card.querySelector(".proxy-address").value = item.address;
-                if (item.building) card.querySelector(".proxy-building").value = item.building;
-                if (item.phone) card.querySelector(".proxy-phone").value = item.phone;
-              }
-            }
 
             // タイトル更新発火
             card.querySelector(".proxy-last-name").dispatchEvent(new Event("input"));
@@ -944,16 +837,6 @@ document.addEventListener("DOMContentLoaded", () => {
         emailInput.focus();
         return;
       }
-      if (!postalCodeInput.value.trim()) {
-        alert("郵便番号をご入力ください。");
-        postalCodeInput.focus();
-        return;
-      }
-      if (!addressInput.value.trim()) {
-        alert("ご住所をご入力ください。");
-        addressInput.focus();
-        return;
-      }
       if (!phoneInput.value.trim()) {
         alert("お電話番号をご入力ください。");
         phoneInput.focus();
@@ -973,17 +856,6 @@ document.addEventListener("DOMContentLoaded", () => {
             card.classList.add("open");
             card.querySelector(".proxy-last-name").focus();
             return;
-          }
-
-          const sameAddressCb = card.querySelector(".proxy-same-address-cb");
-          if (sameAddressCb && !sameAddressCb.checked) {
-            const pAddr = card.querySelector(".proxy-address").value.trim();
-            if (!pAddr) {
-              alert(`別住所を選択された同伴者様（${ln} ${fn} 様）の「ご住所」をご入力ください。`);
-              card.classList.add("open");
-              card.querySelector(".proxy-address").focus();
-              return;
-            }
           }
         }
       }
@@ -1023,10 +895,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="summary-value">${escapeHtml(emailInput.value.trim())}</span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">ご住所</span>
-          <span class="summary-value">〒${escapeHtml(postalCodeInput.value.trim())}<br>${escapeHtml(addressInput.value.trim())} ${escapeHtml(buildingInput.value.trim())}</span>
-        </div>
-        <div class="summary-item">
           <span class="summary-label">電話番号</span>
           <span class="summary-value">${escapeHtml(phoneInput.value.trim())}</span>
         </div>
@@ -1049,12 +917,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return `<span style="color:#888;">${escapeHtml(p.fullName)} 様（ご欠席）</span>`;
           }
           let str = `${escapeHtml(p.fullName)} 様（${escapeHtml(p.ageCategory)}）`;
-          if (p.sameAddress) {
-            str += ` [住所: 主出席者と同一]`;
-          } else {
-            str += ` [別住所: 〒${escapeHtml(p.postalCode)} ${escapeHtml(p.address)} ${escapeHtml(p.building)}]`;
-          }
           if (p.allergies) str += ` [アレルギー: ${escapeHtml(p.allergies)}]`;
+          return str;
+        }).join("<br>");
           return str;
         }).join("<br>");
 
@@ -1102,9 +967,6 @@ document.addEventListener("DOMContentLoaded", () => {
       side: selectedSide ? selectedSide.value : "新郎側",
       ageCategory: ageCategorySelect.value,
       email: emailInput.value.trim(),
-      postalCode: postalCodeInput.value.trim(),
-      address: addressInput.value.trim(),
-      building: buildingInput.value.trim(),
       phone: phoneInput.value.trim(),
       allergies: allergiesInput.value.trim(),
       predefinedProxiesResponse: proxiesData,

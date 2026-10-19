@@ -57,10 +57,8 @@
 | G | `AgeCategory` | String | 年齢区分 (大人 / 子供 / 幼児) | ○ | `大人` |
 | H | `Email` | String | メールアドレス | ○ | `yamada@example.com` |
 | I | `Status` | String | 回答状況 (未回答 / 出席 / 欠席) | ○ | `出席` |
-| J | `PostalCode` | String | 郵便番号 | ○ | `1000001` |
-| K | `Address` | String | 住所 (都道府県・市区町村・番地) | ○ | `東京都千代田区1-1-1` |
-| L | `Building` | String | 建物名・部屋番号 (任意) | ○ | `千代田ビル 101` |
-| M | `Phone` | String | 電話番号 | ○ | `09012345678` |
+| J | `Phone` | String | 電話番号 | ○ | `09012345678` |
+| K | `GuestCategory` | String | 招待客区分 (親族 / 受付 / -) | - | `-` |
 
 ---
 
@@ -80,11 +78,7 @@
 | I | `Email` | String | メールアドレス (任意) | ○ | `hanako@example.com` |
 | J | `Status` | String | 回答状況 (出席 / 欠席) | ○ | `出席` |
 | K | `Allergies` | String | アレルギー・食事制限 | ○ | `えびアレルギー` |
-| L | `SameAddress` | String | 主出席者と同じ住所 (はい / いいえ) | ○ | `はい` |
-| M | `PostalCode` | String | 郵便番号 | ○ | `1000001` |
-| N | `Address` | String | 住所 | ○ | `東京都千代田区1-1-1` |
-| O | `Building` | String | 建物名・部屋番号 | ○ | `千代田ビル 101` |
-| P | `Phone` | String | 電話番号 (任意) | ○ | `09087654321` |
+| L | `Phone` | String | 電話番号 (任意) | ○ | `09087654321` |
 
 ---
 

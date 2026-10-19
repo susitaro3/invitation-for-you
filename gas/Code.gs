@@ -27,8 +27,7 @@ function createWeddingSheets() {
   }
   var tokensHeaders = [
     'Token', 'LastName', 'FirstName', 'KanaLastName', 'KanaFirstName',
-    'Side', 'AgeCategory', 'Email', 'Status',
-    'PostalCode', 'Address', 'Building', 'Phone', 'GuestCategory'
+    'Side', 'AgeCategory', 'Email', 'Status', 'Phone', 'GuestCategory'
   ];
   tokensSheet.appendRow(tokensHeaders);
   formatHeaderRow(tokensSheet, tokensHeaders.length, '#3a506b');
@@ -36,18 +35,15 @@ function createWeddingSheets() {
   // サンプル主ゲストデータ
   tokensSheet.appendRow([
     'sample-guest-01', '山田', '太郎', 'やまだ', 'たろう',
-    '新郎側', '大人', 'yamada@example.com', '未回答',
-    '1000001', '東京都千代田区1-1-1', '千代田ビル 101', '09012345678', '-'
+    '新郎側', '大人', 'yamada@example.com', '未回答', '09012345678', '-'
   ]);
   tokensSheet.appendRow([
     'sample-guest-reception', '鈴木', '一郎', 'すずき', 'いちろう',
-    '新郎側', '大人', 'suzuki@example.com', '未回答',
-    '1500002', '東京都渋谷区2-2-2', '', '09087654321', '受付'
+    '新郎側', '大人', 'suzuki@example.com', '未回答', '09087654321', '受付'
   ]);
   tokensSheet.appendRow([
     'sample-guest-relative', '高橋', '次郎', 'たかはし', 'じろう',
-    '新婦側', '大人', 'takahashi@example.com', '未回答',
-    '1600003', '東京都新宿区3-3-3', '新宿ハイツ 302', '09011112222', '親族'
+    '新婦側', '大人', 'takahashi@example.com', '未回答', '09011112222', '親族'
   ]);
 
   // 2. PredefinedProxies シートの生成・初期化
@@ -59,8 +55,7 @@ function createWeddingSheets() {
   }
   var proxyHeaders = [
     'ProxyId', 'Token', 'LastName', 'FirstName', 'KanaLastName', 'KanaFirstName',
-    'Side', 'AgeCategory', 'Email', 'Status', 'Allergies',
-    'SameAddress', 'PostalCode', 'Address', 'Building', 'Phone'
+    'Side', 'AgeCategory', 'Email', 'Status', 'Allergies', 'Phone'
   ];
   proxySheet.appendRow(proxyHeaders);
   formatHeaderRow(proxySheet, proxyHeaders.length, '#5bc0be');
@@ -68,18 +63,15 @@ function createWeddingSheets() {
   // サンプル事前定義代理出席者データ
   proxySheet.appendRow([
     'proxy-sample-01', 'sample-guest-01', '山田', '花子', 'やまだ', 'はなこ',
-    '新郎側', '大人', 'hanako@example.com', '未回答', '',
-    'はい', '', '', '', ''
+    '新郎側', '大人', 'hanako@example.com', '未回答', '', ''
   ]);
   proxySheet.appendRow([
     'proxy-sample-02', 'sample-guest-01', '山田', '一郎', 'やまだ', 'いちろう',
-    '新郎側', '子供', '', '未回答', '',
-    'はい', '', '', '', ''
+    '新郎側', '子供', '', '未回答', '', ''
   ]);
   proxySheet.appendRow([
     'proxy-relative-01', 'sample-guest-relative', '高橋', '美子', 'たかはし', 'よしこ',
-    '新婦側', '大人', 'yoshiko@example.com', '未回答', '卵アレルギー',
-    'はい', '', '', '', ''
+    '新婦側', '大人', 'yoshiko@example.com', '未回答', '卵アレルギー', ''
   ]);
 
   // 3. Responses シートの生成・初期化
@@ -92,8 +84,7 @@ function createWeddingSheets() {
   var responseHeaders = [
     'Timestamp', 'Token', 'Attendance', 'LastName', 'FirstName',
     'KanaLastName', 'KanaFirstName', 'Side', 'AgeCategory', 'Email',
-    'PostalCode', 'Address', 'Building', 'Phone', 'Allergies',
-    'PredefinedProxiesResponse', 'AdditionalProxies', 'Message'
+    'Phone', 'Allergies', 'PredefinedProxiesResponse', 'AdditionalProxies', 'Message'
   ];
   responseSheet.appendRow(responseHeaders);
   formatHeaderRow(responseSheet, responseHeaders.length, '#6fffe9');
@@ -311,12 +302,6 @@ function doGet(e) {
     return handleIcsCalendarDownload();
   }
 
-  // 🚀 サーバーサイド郵便番号住所検索アクション (CORS完全回避)
-  if (e && e.parameter && e.parameter.action === 'postal') {
-    var searchZip = e.parameter.zip ? e.parameter.zip.replace(/[^\d]/g, '') : '';
-    return handlePostalCodeSearch(searchZip, callback);
-  }
-
   try {
     var token = e && e.parameter ? e.parameter.token : null;
     if (!token) {
@@ -342,11 +327,8 @@ function doGet(e) {
     var colAgeCategory = (tokenMap['agecategory'] || 7) - 1;
     var colEmail = (tokenMap['email'] || 8) - 1;
     var colStatus = (tokenMap['status'] || 9) - 1;
-    var colPostal = (tokenMap['postalcode'] || 10) - 1;
-    var colAddress = (tokenMap['address'] || 11) - 1;
-    var colBuilding = (tokenMap['building'] || 12) - 1;
-    var colPhone = (tokenMap['phone'] || 13) - 1;
-    var colGuestCategory = (tokenMap['guestcategory'] || tokenMap['招待客区分'] || 14) - 1;
+    var colPhone = (tokenMap['phone'] || 10) - 1;
+    var colGuestCategory = (tokenMap['guestcategory'] || tokenMap['招待客区分'] || 11) - 1;
 
     // ヘッダー行(0)をスキップしてTokens検索
     for (var i = 1; i < tokenData.length; i++) {
@@ -365,9 +347,6 @@ function doGet(e) {
           ageCategory: row[colAgeCategory] ? row[colAgeCategory].toString() : '大人',
           email: row[colEmail] ? row[colEmail].toString() : '',
           status: row[colStatus] ? row[colStatus].toString() : '未回答',
-          postalCode: row[colPostal] ? row[colPostal].toString() : '',
-          address: row[colAddress] ? row[colAddress].toString() : '',
-          building: row[colBuilding] ? row[colBuilding].toString() : '',
           phone: row[colPhone] ? row[colPhone].toString() : '',
           guestCategory: guestCat
         };
@@ -398,11 +377,7 @@ function doGet(e) {
       var pColEmail = (proxyMap['email'] || 9) - 1;
       var pColStatus = (proxyMap['status'] || 10) - 1;
       var pColAllergies = (proxyMap['allergies'] || 11) - 1;
-      var pColSameAddress = (proxyMap['sameaddress'] || 12) - 1;
-      var pColPostal = (proxyMap['postalcode'] || 13) - 1;
-      var pColAddress = (proxyMap['address'] || 14) - 1;
-      var pColBuilding = (proxyMap['building'] || 15) - 1;
-      var pColPhone = (proxyMap['phone'] || 16) - 1;
+      var pColPhone = (proxyMap['phone'] || 12) - 1;
 
       for (var p = 1; p < proxyData.length; p++) {
         var pRow = proxyData[p];
@@ -419,10 +394,6 @@ function doGet(e) {
             email: pRow[pColEmail] ? pRow[pColEmail].toString() : '',
             status: pRow[pColStatus] ? pRow[pColStatus].toString() : '未回答',
             allergies: pRow[pColAllergies] ? pRow[pColAllergies].toString() : '',
-            sameAddress: (pRow[pColSameAddress] ? pRow[pColSameAddress].toString() : 'はい') !== 'いいえ',
-            postalCode: pRow[pColPostal] ? pRow[pColPostal].toString() : '',
-            address: pRow[pColAddress] ? pRow[pColAddress].toString() : '',
-            building: pRow[pColBuilding] ? pRow[pColBuilding].toString() : '',
             phone: pRow[pColPhone] ? pRow[pColPhone].toString() : '',
             fullName: (pRow[pColLastName] ? pRow[pColLastName].toString() : '') + ' ' + (pRow[pColFirstName] ? pRow[pColFirstName].toString() : '')
           });
@@ -449,14 +420,11 @@ function doGet(e) {
             side: rRow[7] ? rRow[7].toString() : '',
             ageCategory: rRow[8] ? rRow[8].toString() : '',
             email: rRow[9] ? rRow[9].toString() : '',
-            postalCode: rRow[10] ? rRow[10].toString() : '',
-            address: rRow[11] ? rRow[11].toString() : '',
-            building: rRow[12] ? rRow[12].toString() : '',
-            phone: rRow[13] ? rRow[13].toString() : '',
-            allergies: rRow[14] ? rRow[14].toString() : '',
-            predefinedProxiesResponse: rRow[15] ? rRow[15].toString() : '',
-            additionalProxies: rRow[16] ? rRow[16].toString() : '',
-            message: rRow[17] ? rRow[17].toString() : ''
+            phone: rRow[10] ? rRow[10].toString() : '',
+            allergies: rRow[11] ? rRow[11].toString() : '',
+            predefinedProxiesResponse: rRow[12] ? rRow[12].toString() : '',
+            additionalProxies: rRow[13] ? rRow[13].toString() : '',
+            message: rRow[14] ? rRow[14].toString() : ''
           };
           break;
         }
@@ -475,45 +443,6 @@ function doGet(e) {
   } catch (err) {
     return responseJSON({ success: false, error: 'サーバー処理中にエラーが発生しました: ' + err.toString() }, callback);
   }
-}
-
-/**
- * 🚀 Googleクラウドサーバー側で実行する郵便番号住所自動検索関数 (CORSブロック100%回避)
- */
-function handlePostalCodeSearch(zip, callback) {
-  if (!zip || zip.length !== 7) {
-    return responseJSON({ success: false, error: '郵便番号は7桁の数字で入力してください。' }, callback);
-  }
-
-  // 1. zipcloud API 検索 (サーバー間通信)
-  try {
-    var response = UrlFetchApp.fetch('https://zipcloud.ibsnet.co.jp/api/search?zip=' + zip, { muteHttpExceptions: true });
-    if (response.getResponseCode() === 200) {
-      var data = JSON.parse(response.getContentText());
-      if (data && data.status === 200 && data.results && data.results.length > 0) {
-        var res = data.results[0];
-        var fullAddr = (res.address1 || '') + (res.address2 || '') + (res.address3 || '');
-        return responseJSON({ success: true, address: fullAddr }, callback);
-      }
-    }
-  } catch (e1) {
-    Logger.log('zipcloud UrlFetchApp failed: ' + e1.toString());
-  }
-
-  // 2. ZipAddress API フォールバック (サーバー間通信)
-  try {
-    var response2 = UrlFetchApp.fetch('https://api.zipaddress.net/?zip=' + zip, { muteHttpExceptions: true });
-    if (response2.getResponseCode() === 200) {
-      var data2 = JSON.parse(response2.getContentText());
-      if (data2 && data2.code === 200 && data2.data && data2.data.fullAddress) {
-        return responseJSON({ success: true, address: data2.data.fullAddress }, callback);
-      }
-    }
-  } catch (e2) {
-    Logger.log('ZipAddress UrlFetchApp failed: ' + e2.toString());
-  }
-
-  return responseJSON({ success: false, error: '該当する住所が見つかりませんでした。' }, callback);
 }
 
 /**
@@ -662,9 +591,6 @@ function doPost(e) {
     var side = payload.side || '';
     var ageCategory = payload.ageCategory || '';
     var email = payload.email || '';
-    var postalCode = payload.postalCode || '';
-    var address = payload.address || '';
-    var building = payload.building || '';
     var phone = payload.phone || '';
     var allergies = payload.allergies || '';
 
@@ -690,9 +616,6 @@ function doPost(e) {
       side,
       ageCategory,
       email,
-      postalCode,
-      address,
-      building,
       phone,
       allergies,
       proxiesResponseToStore,
@@ -709,9 +632,6 @@ function doPost(e) {
     if (tokenMap['agecategory'] && ageCategory) tokenSheet.getRange(tokenRowIndex, tokenMap['agecategory']).setValue(ageCategory);
     if (tokenMap['email'] && email) tokenSheet.getRange(tokenRowIndex, tokenMap['email']).setValue(email);
     if (tokenMap['status']) tokenSheet.getRange(tokenRowIndex, tokenMap['status']).setValue(attendance);
-    if (tokenMap['postalcode']) tokenSheet.getRange(tokenRowIndex, tokenMap['postalcode']).setValue(postalCode);
-    if (tokenMap['address']) tokenSheet.getRange(tokenRowIndex, tokenMap['address']).setValue(address);
-    if (tokenMap['building']) tokenSheet.getRange(tokenRowIndex, tokenMap['building']).setValue(building);
     if (tokenMap['phone']) tokenSheet.getRange(tokenRowIndex, tokenMap['phone']).setValue(phone);
 
     // 🚀 PredefinedProxies シート（同伴者マスター）の該当行を動的ヘッダー列指定で直接更新！
@@ -791,7 +711,6 @@ function sendConfirmationEmail(payload) {
 
   if (attendanceStatus === '出席') {
     body += '・メールアドレス：' + sendto + '\n' +
-      '・ご住所：〒' + (payload.postalCode || '') + ' ' + (payload.address || '') + ' ' + (payload.building || '') + '\n' +
       '・お電話番号：' + (payload.phone || '') + '\n';
 
     if (payload.allergies) {
@@ -912,26 +831,10 @@ function updatePredefinedProxiesSheet(ss, token, proxiesResponse, mainPayload) {
       if (proxyMap['agecategory'] && item.ageCategory !== undefined) proxySheet.getRange(targetRowNum, proxyMap['agecategory']).setValue(item.ageCategory);
       if (proxyMap['status']) proxySheet.getRange(targetRowNum, proxyMap['status']).setValue(item.attending ? '出席' : '欠席');
       if (proxyMap['allergies'] && item.allergies !== undefined) proxySheet.getRange(targetRowNum, proxyMap['allergies']).setValue(item.allergies);
-
-      var isSame = item.sameAddress !== false;
-      if (proxyMap['sameaddress']) proxySheet.getRange(targetRowNum, proxyMap['sameaddress']).setValue(isSame ? 'はい' : 'いいえ');
-
-      if (isSame) {
-        if (mainPayload) {
-          if (proxyMap['postalcode']) proxySheet.getRange(targetRowNum, proxyMap['postalcode']).setValue(mainPayload.postalCode || '');
-          if (proxyMap['address']) proxySheet.getRange(targetRowNum, proxyMap['address']).setValue(mainPayload.address || '');
-          if (proxyMap['building']) proxySheet.getRange(targetRowNum, proxyMap['building']).setValue(mainPayload.building || '');
-          if (proxyMap['phone']) proxySheet.getRange(targetRowNum, proxyMap['phone']).setValue(mainPayload.phone || '');
-        }
-      } else {
-        if (proxyMap['postalcode'] && item.postalCode !== undefined) proxySheet.getRange(targetRowNum, proxyMap['postalcode']).setValue(item.postalCode);
-        if (proxyMap['address'] && item.address !== undefined) proxySheet.getRange(targetRowNum, proxyMap['address']).setValue(item.address);
-        if (proxyMap['building'] && item.building !== undefined) proxySheet.getRange(targetRowNum, proxyMap['building']).setValue(item.building);
-        if (proxyMap['phone'] && item.phone !== undefined) proxySheet.getRange(targetRowNum, proxyMap['phone']).setValue(item.phone);
-      }
+      if (proxyMap['phone'] && item.phone !== undefined) proxySheet.getRange(targetRowNum, proxyMap['phone']).setValue(item.phone);
     } else {
       // 🚀 新規追加の同伴者様の場合は PredefinedProxies シートへ行追加！
-      var maxCol = proxySheet.getLastColumn() || 16;
+      var maxCol = proxySheet.getLastColumn() || 12;
       var newProxyRow = [];
       for (var c = 0; c < maxCol; c++) {
         newProxyRow.push('');
@@ -949,21 +852,7 @@ function updatePredefinedProxiesSheet(ss, token, proxiesResponse, mainPayload) {
       if (proxyMap['agecategory']) newProxyRow[proxyMap['agecategory'] - 1] = item.ageCategory || '大人';
       if (proxyMap['status']) newProxyRow[proxyMap['status'] - 1] = item.attending ? '出席' : '欠席';
       if (proxyMap['allergies']) newProxyRow[proxyMap['allergies'] - 1] = item.allergies || '';
-
-      var isSameNew = item.sameAddress !== false;
-      if (proxyMap['sameaddress']) newProxyRow[proxyMap['sameaddress'] - 1] = isSameNew ? 'はい' : 'いいえ';
-
-      if (isSameNew && mainPayload) {
-        if (proxyMap['postalcode']) newProxyRow[proxyMap['postalcode'] - 1] = mainPayload.postalCode || '';
-        if (proxyMap['address']) newProxyRow[proxyMap['address'] - 1] = mainPayload.address || '';
-        if (proxyMap['building']) newProxyRow[proxyMap['building'] - 1] = mainPayload.building || '';
-        if (proxyMap['phone']) newProxyRow[proxyMap['phone'] - 1] = mainPayload.phone || '';
-      } else {
-        if (proxyMap['postalcode']) newProxyRow[proxyMap['postalcode'] - 1] = item.postalCode || '';
-        if (proxyMap['address']) newProxyRow[proxyMap['address'] - 1] = item.address || '';
-        if (proxyMap['building']) newProxyRow[proxyMap['building'] - 1] = item.building || '';
-        if (proxyMap['phone']) newProxyRow[proxyMap['phone'] - 1] = item.phone || '';
-      }
+      if (proxyMap['phone']) newProxyRow[proxyMap['phone'] - 1] = item.phone || '';
 
       proxySheet.appendRow(newProxyRow);
     }
@@ -993,7 +882,6 @@ function formatPredefinedProxiesResponse(proxiesRaw) {
       var details = [status, p.ageCategory || '大人'];
       if (kana.trim().length > 0) details.push('ふりがな: ' + kana.trim());
       if (p.allergies) details.push('アレルギー: ' + p.allergies);
-      if (p.sameAddress !== undefined) details.push(p.sameAddress ? '住所: 同一' : '住所: 個別');
       return name.trim() + ' (' + details.join(', ') + ')';
     }).join('\n');
   }

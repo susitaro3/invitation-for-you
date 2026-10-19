@@ -136,8 +136,8 @@
         <div class="info-item calendar-action-row">
           <span class="info-label">予定登録：</span>
           <span class="info-value calendar-buttons-container">
-            <button type="button" id="btnGoogleCalendar" class="calendar-btn">📅 Googleカレンダーに追加</button>
-            <button type="button" id="btnAppleCalendar" class="calendar-btn">🍏 Apple / Outlook (.ics)</button>
+            <a id="btnGoogleCalendar" href="#" target="_blank" rel="noopener" class="calendar-btn">📅 Googleカレンダーに追加</a>
+            <a id="btnAppleCalendar" href="#" target="_blank" rel="noopener" class="calendar-btn">🍏 Apple / Outlook (.ics)</a>
           </span>
         </div>
         <div class="info-item">
@@ -272,10 +272,10 @@
         </div>
       </section>
 
-      <!-- 連絡先・住所情報 (出席時のみ表示) -->
+      <!-- 連絡先情報 (出席時のみ表示) -->
       <section class="card" id="contactSection">
         <h2 class="section-title">
-          ご連絡先・ご住所
+          ご連絡先
           <span class="required-badge">必須</span>
         </h2>
 
@@ -283,27 +283,6 @@
         <div class="form-group">
           <label class="form-label" for="email">メールアドレス</label>
           <input type="email" id="email" name="email" placeholder="example@domain.com">
-        </div>
-
-        <!-- 郵便番号 -->
-        <div class="form-group">
-          <label class="form-label" for="postalCode">郵便番号</label>
-          <input type="text" id="postalCode" name="postalCode" placeholder="例: 100-0001" maxlength="8">
-        </div>
-
-        <!-- 住所 -->
-        <div class="form-group">
-          <label class="form-label" for="address">住所</label>
-          <input type="text" id="address" name="address" placeholder="都道府県・市区町村・番地">
-        </div>
-
-        <!-- 建物名・部屋番号 -->
-        <div class="form-group">
-          <label class="form-label" for="building">
-            建物名・部屋番号
-            <span class="optional-badge">任意</span>
-          </label>
-          <input type="text" id="building" name="building" placeholder="〇〇マンション 101号室">
         </div>
 
         <!-- 電話番号 -->
