@@ -12,7 +12,7 @@ const initialToken = (
 let earlyFetchPromise = null;
 if (initialToken && typeof CONFIG !== "undefined" && CONFIG.GAS_WEB_APP_URL && !CONFIG.GAS_WEB_APP_URL.includes("YOUR_GAS_WEB_APP_URL")) {
   const earlyUrl = `${CONFIG.GAS_WEB_APP_URL}?token=${encodeURIComponent(initialToken)}`;
-  earlyFetchPromise = fetch(earlyUrl)
+  earlyFetchPromise = fetch(earlyUrl, { method: "GET", credentials: "omit", redirect: "follow" })
     .then((res) => (res.ok ? res.json() : null))
     .catch((err) => null);
 }
@@ -373,7 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, { method: "GET", credentials: "omit", redirect: "follow", signal: controller.signal });
       clearTimeout(timer);
       if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
       return await response.json();
@@ -983,6 +983,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "text/plain;charset=utf-8"
         },
         body: JSON.stringify(payload),
+        credentials: "omit",
+        redirect: "follow",
         signal: controller.signal
       });
       clearTimeout(timeoutId);
