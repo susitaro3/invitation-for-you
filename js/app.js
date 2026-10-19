@@ -208,29 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const deadlineElem = document.getElementById("responseDeadlineDisplay");
       if (deadlineElem) deadlineElem.textContent = `${CONFIG.RESPONSE_DEADLINE} まで`;
     }
-
-    // カレンダー登録リンク (ネイティブ <a> タグ href 自動セット)
-    const btnGCal = document.getElementById("btnGoogleCalendar");
-    if (btnGCal) {
-      function toUtcIso(isoStr) {
-        const d = new Date(isoStr);
-        if (isNaN(d.getTime())) return "20270211T040000Z";
-        return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-      }
-      const title = encodeURIComponent(`${CONFIG.GROOM_NAME || "新郎"} & ${CONFIG.BRIDE_NAME || "新婦"} 結婚式・披露宴`);
-      const start = toUtcIso(CONFIG.EVENT_START || "2027-02-11T13:00:00+09:00");
-      const end = toUtcIso(CONFIG.EVENT_END || "2027-02-11T17:00:00+09:00");
-      const details = encodeURIComponent(`【結婚式のご案内】\n日時: ${CONFIG.WEDDING_DATE} ${CONFIG.RECEPTION_TIME}\n場所: ${CONFIG.VENUE_NAME}\n住所: ${CONFIG.VENUE_ADDRESS}`);
-      const location = encodeURIComponent(`${CONFIG.VENUE_NAME} ${CONFIG.VENUE_ADDRESS}`);
-      btnGCal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-    }
-
-    const btnApple = document.getElementById("btnAppleCalendar");
-    if (btnApple) {
-      if (CONFIG.GAS_WEB_APP_URL && !CONFIG.GAS_WEB_APP_URL.includes("YOUR_SCRIPT_ID")) {
-        btnApple.href = `${CONFIG.GAS_WEB_APP_URL}?action=ics`;
-      }
-    }
   }
 
   /**
