@@ -920,8 +920,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (p.allergies) str += ` [アレルギー: ${escapeHtml(p.allergies)}]`;
           return str;
         }).join("<br>");
-          return str;
-        }).join("<br>");
 
         html += `
           <div class="summary-item">
