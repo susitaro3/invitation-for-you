@@ -591,11 +591,11 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="input-row">
           <div class="form-group">
-            <label class="form-label">せい（よみがな）</label>
+            <label class="form-label">せい（よみがな） <span class="required-badge">必須</span></label>
             <input type="text" class="proxy-kana-last" value="${escapeHtml(proxy.kanaLastName || "")}">
           </div>
           <div class="form-group">
-            <label class="form-label">めい（よみがな）</label>
+            <label class="form-label">めい（よみがな） <span class="required-badge">必須</span></label>
             <input type="text" class="proxy-kana-first" value="${escapeHtml(proxy.kanaFirstName || "")}">
           </div>
         </div>
@@ -828,10 +828,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cb && cb.checked) {
           const ln = card.querySelector(".proxy-last-name").value.trim();
           const fn = card.querySelector(".proxy-first-name").value.trim();
+          const kln = card.querySelector(".proxy-kana-last").value.trim();
+          const kfn = card.querySelector(".proxy-kana-first").value.trim();
           if (!ln || !fn) {
             alert(`ご出席される同伴者様のお名前（姓・名）をご入力ください。`);
             card.classList.add("open");
             card.querySelector(".proxy-last-name").focus();
+            return;
+          }
+          if (!kln || !kfn) {
+            alert(`ご出席される同伴者様のお名前のよみがな（せい・めい）をご入力ください。`);
+            card.classList.add("open");
+            card.querySelector(".proxy-kana-last").focus();
             return;
           }
         }
