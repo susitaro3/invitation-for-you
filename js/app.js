@@ -604,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <select class="proxy-age-category">
             <option value="大人" ${ageCategory === "大人" ? "selected" : ""}>大人</option>
             <option value="子供" ${ageCategory === "子供" ? "selected" : ""}>子供（小学生以下）</option>
-            <option value="幼児" ${ageCategory === "幼児" ? "selected" : ""}>幼児</option>
+            <option value="幼児" ${ageCategory === "幼児" ? "selected" : ""}>幼児（座席・食事なし）</option>
           </select>
         </div>
         <div class="form-group">
