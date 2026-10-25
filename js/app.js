@@ -777,6 +777,16 @@ document.addEventListener("DOMContentLoaded", () => {
       allergySection.classList.add("hidden");
       proxySection.classList.add("hidden");
       guestMetaFields.classList.add("hidden");
+
+      // 主出席者が「欠席」の場合、同伴者カードの出欠チェックをすべてOFFにする
+      const cards = predefinedProxyContainer.querySelectorAll(".accordion-card");
+      cards.forEach((card) => {
+        const cb = card.querySelector(".proxy-attend-cb");
+        if (cb) {
+          cb.checked = false;
+          cb.dispatchEvent(new Event("change"));
+        }
+      });
     } else {
       contactSection.classList.remove("hidden");
       allergySection.classList.remove("hidden");
@@ -828,8 +838,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cb && cb.checked) {
           const ln = card.querySelector(".proxy-last-name").value.trim();
           const fn = card.querySelector(".proxy-first-name").value.trim();
-          const kln = card.querySelector(".proxy-kana-last").value.trim();
-          const kfn = card.querySelector(".proxy-kana-first").value.trim();
+          let kln = card.querySelector(".proxy-kana-last").value.trim();
+          let kfn = card.querySelector(".proxy-kana-first").value.trim();
           if (!ln || !fn) {
             alert(`ご出席される同伴者様のお名前（姓・名）をご入力ください。`);
             card.classList.add("open");
@@ -837,10 +847,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
           if (!kln || !kfn) {
-            alert(`ご出席される同伴者様のお名前のよみがな（せい・めい）をご入力ください。`);
-            card.classList.add("open");
-            card.querySelector(".proxy-kana-last").focus();
-            return;
+            // よみがなが空欄の場合は漢字のお名前で自動補完（入力ストップを防ぐ）
+            if (!kln) card.querySelector(".proxy-kana-last").value = ln;
+            if (!kfn) card.querySelector(".proxy-kana-first").value = fn;
           }
         }
       }
