@@ -1057,6 +1057,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
+   * 電話番号の先頭ゼロ欠け補正ヘルパー (例: 9012345678 -> 09012345678)
+   */
+  function formatPhoneNumber(phone) {
+    if (!phone) return "";
+    let str = String(phone).trim();
+    if (str === "") return "";
+    if (!str.startsWith("0") && !str.startsWith("+") && /^\d{9,10}$/.test(str.replace(/[-\s]/g, ""))) {
+      return "0" + str;
+    }
+    return str;
+  }
+
+  /**
    * HTMLエスケープヘルパー
    */
   function escapeHtml(str) {
