@@ -112,6 +112,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // モーダル送信実行ボタン
   btnModalSubmit.addEventListener("click", handleFormSubmit);
 
+  // 準備中アラートモーダル関連
+  const loadingAlertModal = document.getElementById("loadingAlertModal");
+  const btnLoadingAlertClose = document.getElementById("btnLoadingAlertClose");
+
+  if (btnLoadingAlertClose) {
+    btnLoadingAlertClose.addEventListener("click", () => {
+      if (loadingAlertModal) loadingAlertModal.classList.remove("active");
+    });
+  }
+  if (loadingAlertModal) {
+    loadingAlertModal.addEventListener("click", (e) => {
+      if (e.target === loadingAlertModal) {
+        loadingAlertModal.classList.remove("active");
+      }
+    });
+  }
+
 
   // ==========================================================================
   // 関数定義
@@ -137,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function openEnvelope(e) {
       if (e) e.stopPropagation();
       if (!isDataLoaded) {
-        alert("招待状データを読み込んでいます。少々お待ちください...");
+        if (loadingAlertModal) loadingAlertModal.classList.add("active");
         return;
       }
       if (isOpening) return;
