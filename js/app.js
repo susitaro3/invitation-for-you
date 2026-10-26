@@ -127,7 +127,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const waxSeal = document.getElementById("waxSeal") || document.querySelector(".wax-seal");
     if (!overlay || !container) return;
 
-    if (btnOpen) btnOpen.classList.add("loading");
+    if (btnOpen) {
+      btnOpen.textContent = "準備中・・・";
+      btnOpen.classList.add("loading");
+    }
 
     let isOpening = false;
 
@@ -426,7 +429,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // データの読み込み完了！開封ロック解除
     isDataLoaded = true;
     const btnOpen = document.getElementById("btnOpenInvitation");
-    if (btnOpen) btnOpen.classList.remove("loading");
+    if (btnOpen) {
+      btnOpen.textContent = "招待状を開く";
+      btnOpen.classList.remove("loading");
+    }
 
     // 画面表示切り替え
     loadingContainer.classList.add("hidden");
