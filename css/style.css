@@ -944,6 +944,54 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.proxy-attendance-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
+}
+
+.proxy-attend-option {
+  cursor: pointer;
+  position: relative;
+}
+
+.proxy-attend-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.proxy-attend-btn {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: var(--fz-sub);
+  font-family: var(--font-serif);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.proxy-attend-radio:checked + .proxy-attend-btn.attend {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.3);
+}
+
+.proxy-attend-radio:checked + .proxy-attend-btn.decline {
+  background-color: #888888;
+  color: #ffffff;
+  border-color: #888888;
+  font-weight: bold;
 }
 
 .accordion-checkbox {

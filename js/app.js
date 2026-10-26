@@ -572,9 +572,17 @@ document.addEventListener("DOMContentLoaded", () => {
     card.innerHTML = `
       <div class="accordion-header">
         <div class="accordion-title-group">
-          <input type="checkbox" class="accordion-checkbox proxy-attend-cb" id="cb_${proxy.proxyId}" ${isInitiallyAttending ? "checked" : ""}>
+          <div class="proxy-attendance-selector">
+            <label class="proxy-attend-option" onclick="event.stopPropagation();">
+              <input type="radio" name="proxy_attend_${proxy.proxyId}" class="proxy-attend-radio proxy-attend-yes" value="出席" ${isInitiallyAttending ? "checked" : ""}>
+              <span class="proxy-attend-btn attend">ご出席</span>
+            </label>
+            <label class="proxy-attend-option" onclick="event.stopPropagation();">
+              <input type="radio" name="proxy_attend_${proxy.proxyId}" class="proxy-attend-radio proxy-attend-no" value="欠席" ${!isInitiallyAttending ? "checked" : ""}>
+              <span class="proxy-attend-btn decline">ご欠席</span>
+            </label>
+          </div>
           <span class="accordion-title">${escapeHtml(proxyName || "新規同伴者様")}（${escapeHtml(ageCategory)}）</span>
-          <span class="accordion-badge">タップして詳細を修正</span>
         </div>
         <span class="accordion-toggle-icon">▼</span>
       </div>
@@ -621,7 +629,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // DOM参照
     const header = card.querySelector(".accordion-header");
-    const cb = card.querySelector(".proxy-attend-cb");
+    const radios = card.querySelectorAll(".proxy-attend-radio");
+    const yesRadio = card.querySelector(".proxy-attend-yes");
     const title = card.querySelector(".accordion-title");
     const lastNameIn = card.querySelector(".proxy-last-name");
     const firstNameIn = card.querySelector(".proxy-first-name");
@@ -633,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ln = lastNameIn.value.trim();
       const fn = firstNameIn.value.trim();
       const age = ageSelect.value;
-      const isAttending = cb.checked;
+      const isAttending = yesRadio.checked;
       const displayName = (ln || fn) ? `${ln} ${fn}` : "同伴者名未入力";
 
       if (isAttending) {
@@ -660,19 +669,21 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // チェックボックスイベント
-    cb.addEventListener("change", (e) => {
-      e.stopPropagation();
-      updateTitle();
-      if (cb.checked) {
-        card.classList.add("open");
-      } else {
-        card.classList.remove("open");
-      }
-    });
+    // ラジオボタンイベント
+    radios.forEach((radio) => {
+      radio.addEventListener("change", (e) => {
+        e.stopPropagation();
+        updateTitle();
+        if (yesRadio.checked) {
+          card.classList.add("open");
+        } else {
+          card.classList.remove("open");
+        }
+      });
 
-    cb.addEventListener("click", (e) => {
-      e.stopPropagation();
+      radio.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
     });
 
     // アコーディオン開閉
@@ -699,8 +710,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cards.forEach((card) => {
       const proxyId = card.getAttribute("data-proxy-id");
-      const cb = card.querySelector(".proxy-attend-cb");
-      const isAttending = cb ? cb.checked : false;
+      const yesRadio = card.querySelector(".proxy-attend-yes");
+      const isAttending = yesRadio ? yesRadio.checked : false;
 
       const ln = card.querySelector(".proxy-last-name").value.trim();
       const fn = card.querySelector(".proxy-first-name").value.trim();
@@ -748,8 +759,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           if (card) {
-            const cb = card.querySelector(".proxy-attend-cb");
-            if (cb) cb.checked = item.attending !== false;
+            const yesRadio = card.querySelector(".proxy-attend-yes");
+            const noRadio = card.querySelector(".proxy-attend-no");
+            if (item.attending !== false) {
+              if (yesRadio) yesRadio.checked = true;
+            } else {
+              if (noRadio) noRadio.checked = true;
+            }
 
             if (item.lastName) card.querySelector(".proxy-last-name").value = item.lastName;
             if (item.firstName) card.querySelector(".proxy-first-name").value = item.firstName;
@@ -778,13 +794,13 @@ document.addEventListener("DOMContentLoaded", () => {
       proxySection.classList.add("hidden");
       guestMetaFields.classList.add("hidden");
 
-      // 主出席者が「欠席」の場合、同伴者カードの出欠チェックをすべてOFFにする
+      // 主出席者が「欠席」の場合、同伴者カードの出欠をすべて「欠席」にする
       const cards = predefinedProxyContainer.querySelectorAll(".accordion-card");
       cards.forEach((card) => {
-        const cb = card.querySelector(".proxy-attend-cb");
-        if (cb) {
-          cb.checked = false;
-          cb.dispatchEvent(new Event("change"));
+        const noRadio = card.querySelector(".proxy-attend-no");
+        if (noRadio) {
+          noRadio.checked = true;
+          noRadio.dispatchEvent(new Event("change"));
         }
       });
     } else {
@@ -834,8 +850,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const cards = predefinedProxyContainer.querySelectorAll(".accordion-card");
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        const cb = card.querySelector(".proxy-attend-cb");
-        if (cb && cb.checked) {
+        const yesRadio = card.querySelector(".proxy-attend-yes");
+        if (yesRadio && yesRadio.checked) {
           const ln = card.querySelector(".proxy-last-name").value.trim();
           const fn = card.querySelector(".proxy-first-name").value.trim();
           const kln = card.querySelector(".proxy-kana-last").value.trim();
