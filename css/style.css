@@ -520,19 +520,21 @@ body {
 
 .invitation-text {
   font-family: var(--font-serif);
-  font-size: clamp(0.72rem, 3.4vw, 0.95rem);
+  font-size: clamp(0.78rem, 3.5vw, 0.95rem);
   color: var(--text-muted);
   line-height: 2;
   margin-bottom: 30px;
   text-align: center;
   max-width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
+  padding: 0 5px;
 }
 
 .invitation-line {
-  display: inline-block;
-  white-space: nowrap;
-  max-width: 100%;
+  display: inline;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .btn-open-envelope.loading {
