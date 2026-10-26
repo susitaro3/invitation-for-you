@@ -512,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
       emailInput.value = guest.email;
     }
 
-    if (guest.phone) phoneInput.value = guest.phone;
+    if (guest.phone) phoneInput.value = formatPhoneNumber(guest.phone);
 
     // 事前定義代理出席者アコーディオンカード群の生成 (PredefinedProxiesシート)
     if (proxies && proxies.length > 0) {
@@ -543,7 +543,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (existingResp.kanaLastName) kanaLastNameInput.value = existingResp.kanaLastName;
       if (existingResp.kanaFirstName) kanaFirstNameInput.value = existingResp.kanaFirstName;
       if (existingResp.email) emailInput.value = existingResp.email;
-      if (existingResp.phone) phoneInput.value = existingResp.phone;
+      if (existingResp.phone) phoneInput.value = formatPhoneNumber(existingResp.phone);
       if (existingResp.allergies) allergiesInput.value = existingResp.allergies;
       if (existingResp.message) messageInput.value = existingResp.message;
 
