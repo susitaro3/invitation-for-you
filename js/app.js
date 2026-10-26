@@ -464,32 +464,32 @@ document.addEventListener("DOMContentLoaded", () => {
       const cat = (guest && guest.guestCategory ? guest.guestCategory : "-").trim();
       if (cat === "受付") {
         invitationTextElem.innerHTML =
-          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
-          "このたび 私たちは結婚式を挙げることとなりました<br>" +
-          "日頃お世話になっております皆様をお招きして<br>" +
-          "ささやかな宴を催したく存じます<br>" +
-          "ご多用中 大変恐縮ですが 私共の受付係をお願いしたく<br>" +
-          "当日はお支度完了の上 12時30分までにお越しくださいますよう<br>"+
-          "お願い申し上げます";
+          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
+          '<span class="invitation-line">ご多用中 大変恐縮ですが 私共の受付係をお願いしたく</span><br>' +
+          '<span class="invitation-line">当日はお支度完了の上 12時30分までにお越しくださいますよう</span><br>' +
+          '<span class="invitation-line">お願い申し上げます</span>';
       } else if (cat === "親族") {
         invitationTextElem.innerHTML =
-          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
-          "このたび 私たちは結婚式を挙げることとなりました<br>" +
-          "日頃お世話になっております皆様をお招きして<br>" +
-          "ささやかな宴を催したく存じます<br>" +
-          "ご多用中 恐縮でございますが 親族紹介にご参加賜りたく<br>" +
-          "当日はお支度完了の上 12時30分までにお越しいただきますよう<br>"+
-          "お願い申し上げます";
+          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
+          '<span class="invitation-line">ご多用中 恐縮でございますが 親族紹介にご参加賜りたく</span><br>' +
+          '<span class="invitation-line">当日はお支度完了の上 12時30分までにお越しいただきますよう</span><br>' +
+          '<span class="invitation-line">お願い申し上げます</span>';
       } else {
         // デフォルト (-)
         invitationTextElem.innerHTML =
-          "皆様におかれましては ますますご清祥のこととお慶び申し上げます<br>" +
-          "このたび 私たちは結婚式を挙げることとなりました<br>" +
-          "日頃お世話になっております皆様をお招きして<br>" +
-          "ささやかな宴を催したく存じます<br>" +
-          "ご多用中 大変恐縮ですが 挙式にもご参列賜りたく<br>" +
-          "当日は 午後1時までにお越しくださいますよう<br>"+
-          "お願い申し上げます";
+          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
+          '<span class="invitation-line">ご多用中 大変恐縮ですが 挙式にもご参列賜りたく</span><br>' +
+          '<span class="invitation-line">当日は 午後1時までにお越しくださいますよう</span><br>' +
+          '<span class="invitation-line">お願い申し上げます</span>';
       }
     }
 
