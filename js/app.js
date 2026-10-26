@@ -582,7 +582,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="proxy-attend-btn decline">ご欠席</span>
             </label>
           </div>
-          <span class="accordion-title">${escapeHtml(proxyName || "新規同伴者様")}（${escapeHtml(ageCategory)}）</span>
+          <span class="accordion-title">${escapeHtml(proxyName ? (proxyName + " 様") : "新規同伴者様")}</span>
         </div>
         <span class="accordion-toggle-icon">▼</span>
       </div>
@@ -641,17 +641,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const updateTitle = () => {
       const ln = lastNameIn.value.trim();
       const fn = firstNameIn.value.trim();
-      const age = ageSelect.value;
       const isAttending = yesRadio.checked;
-      const displayName = (ln || fn) ? `${ln} ${fn}` : "同伴者名未入力";
+      const displayName = (ln || fn) ? `${ln} ${fn} 様` : "新規同伴者様";
 
-      if (isAttending) {
-        title.textContent = `${displayName} 様（${age}）`;
-        card.style.opacity = "1";
-      } else {
-        title.textContent = `${displayName} 様（ご欠席）`;
-        card.style.opacity = "0.7";
-      }
+      title.textContent = displayName;
+      card.style.opacity = isAttending ? "1" : "0.7";
     };
 
     // 削除ボタンイベント
