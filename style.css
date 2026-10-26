@@ -33,8 +33,8 @@
   --fz-small: 0.78rem;   /* 注記・マイクロテキスト */
 
   /* ★ 全要素のフォントを Shippori Mincho (しっぽり明朝) に完全統一 */
-  --font-serif: "Shippori Mincho", "Noto Serif JP", "Yu Mincho", YuMincho, serif;
-  --font-sans: "Shippori Mincho", "Noto Serif JP", serif;
+  --font-serif: "Shippori Mincho", serif;
+  --font-sans: "Shippori Mincho", serif;
 }
 
 * {
@@ -155,22 +155,30 @@ body {
 /* 封かんワックスシール */
 .wax-seal {
   position: absolute;
-  bottom: 12px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
-  color: #ffffff;
+  width: 54px;
+  height: 54px;
+  background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--fz-h2);
-  font-family: var(--font-serif);
-  box-shadow: none;
-  border: 2px solid #ffffff;
-  transition: opacity 0.4s ease;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.4s ease, transform 0.2s ease;
+}
+
+.wax-seal:hover {
+  transform: translateX(-50%) scale(1.05);
+}
+
+.wax-seal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* 開封アニメーション発動時 (openクラス) */
@@ -512,14 +520,33 @@ body {
 
 .invitation-text {
   font-family: var(--font-serif);
-  font-size: var(--fz-body);
+  font-size: clamp(0.78rem, 3.5vw, 0.95rem);
   color: var(--text-muted);
   line-height: 2;
   margin-bottom: 30px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  padding: 0 5px;
+}
+
+.invitation-line {
+  display: inline-block;
   word-break: keep-all;
   overflow-wrap: break-word;
-  line-break: strict;
+  text-align: center;
+}
+
+.btn-open-envelope.loading {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.btn-open-envelope.loading span::after {
+  content: " (準備中...)";
 }
 
 .info-box {
@@ -668,6 +695,34 @@ body {
    -------------------------------------------------------------------------- */
 .form-group {
   margin-bottom: 22px;
+}
+
+.calendar-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calendar-btn {
+  font-family: var(--font-serif);
+  font-size: var(--fz-sub);
+  color: var(--primary-color);
+  background-color: #fff;
+  border: 1px solid var(--primary-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendar-btn:hover {
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.3);
 }
 
 .form-group:last-child {
@@ -908,6 +963,54 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.proxy-attendance-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
+}
+
+.proxy-attend-option {
+  cursor: pointer;
+  position: relative;
+}
+
+.proxy-attend-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.proxy-attend-btn {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: var(--fz-sub);
+  font-family: var(--font-serif);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.proxy-attend-radio:checked + .proxy-attend-btn.attend {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.3);
+}
+
+.proxy-attend-radio:checked + .proxy-attend-btn.decline {
+  background-color: #888888;
+  color: #ffffff;
+  border-color: #888888;
+  font-weight: bold;
 }
 
 .accordion-checkbox {
@@ -1222,6 +1325,12 @@ textarea {
 @media (max-width: 480px) {
   .container {
     padding: 0 12px;
+  }
+
+  .invitation-text {
+    font-size: clamp(0.65rem, 3.1vw, 0.85rem);
+    line-height: 1.9;
+    padding: 0 2px;
   }
 
   .card {
