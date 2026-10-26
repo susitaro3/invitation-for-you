@@ -824,8 +824,8 @@ document.addEventListener("DOMContentLoaded", () => {
         emailInput.focus();
         return;
       }
-      if (!phoneInput.value.trim()) {
-        alert("お電話番号をご入力ください。");
+      if (!phoneInput.value.trim() || !validatePhone(phoneInput.value.trim())) {
+        alert("有効なお電話番号をご入力ください（例: 09012345678 または 090-1234-5678）。");
         phoneInput.focus();
         return;
       }
@@ -838,18 +838,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cb && cb.checked) {
           const ln = card.querySelector(".proxy-last-name").value.trim();
           const fn = card.querySelector(".proxy-first-name").value.trim();
-          let kln = card.querySelector(".proxy-kana-last").value.trim();
-          let kfn = card.querySelector(".proxy-kana-first").value.trim();
+          const kln = card.querySelector(".proxy-kana-last").value.trim();
+          const kfn = card.querySelector(".proxy-kana-first").value.trim();
           if (!ln || !fn) {
             alert(`ご出席される同伴者様のお名前（姓・名）をご入力ください。`);
             card.classList.add("open");
-            card.querySelector(".proxy-last-name").focus();
+            card.querySelector(!ln ? ".proxy-last-name" : ".proxy-first-name").focus();
             return;
           }
           if (!kln || !kfn) {
-            // よみがなが空欄の場合は漢字のお名前で自動補完（入力ストップを防ぐ）
-            if (!kln) card.querySelector(".proxy-kana-last").value = ln;
-            if (!kfn) card.querySelector(".proxy-kana-first").value = fn;
+            alert(`ご出席される同伴者様のお名前のよみがな（せい・めい）をご入力ください。`);
+            card.classList.add("open");
+            card.querySelector(!kln ? ".proxy-kana-last" : ".proxy-kana-first").focus();
+            return;
           }
         }
       }
@@ -1044,6 +1045,15 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /**
+   * 電話番号形式検証 (ハイフンあり/なし両対応, 10桁または11桁)
+   */
+  function validatePhone(phone) {
+    if (!phone) return false;
+    const cleaned = phone.replace(/[-\s]/g, "");
+    return /^0\d{9,10}$/.test(cleaned);
   }
 
   /**
