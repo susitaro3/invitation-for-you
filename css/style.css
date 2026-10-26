@@ -520,7 +520,7 @@ body {
 
 .invitation-text {
   font-family: var(--font-serif);
-  font-size: clamp(0.72rem, 3.6vw, 0.95rem);
+  font-size: clamp(0.8rem, 3.8vw, 0.95rem);
   color: var(--text-muted);
   line-height: 2;
   margin-bottom: 30px;
@@ -528,7 +528,6 @@ body {
   word-break: keep-all;
   overflow-wrap: break-word;
   line-break: strict;
-  letter-spacing: -0.01em;
 }
 
 .info-box {
@@ -1310,10 +1309,9 @@ textarea {
   }
 
   .invitation-text {
-    font-size: clamp(0.68rem, 3.4vw, 0.88rem);
-    letter-spacing: -0.02em;
+    font-size: clamp(0.72rem, 3.5vw, 0.88rem);
     line-height: 1.95;
-    padding: 0 2px;
+    padding: 0 4px;
   }
 
   .card {
