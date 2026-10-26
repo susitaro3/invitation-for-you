@@ -524,7 +524,9 @@ body {
   color: var(--text-muted);
   line-height: 2;
   margin-bottom: 30px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -532,18 +534,15 @@ body {
 }
 
 .invitation-line {
-  display: inline;
+  display: inline-block;
   word-break: keep-all;
   overflow-wrap: break-word;
+  text-align: center;
 }
 
 .btn-open-envelope.loading {
   opacity: 0.75;
   cursor: wait;
-}
-
-.btn-open-envelope.loading span::after {
-  content: " (準備中...)";
 }
 
 .info-box {
