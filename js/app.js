@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentToken = "";
   let guestData = null;
   let predefinedProxiesList = [];
+  let isDataLoaded = false;
 
   // 1. 全画面オープニング起動、CONFIG情報でヘッダーテキストを初期化、全画像プリロード & ヒーローフォトギャラリー起動
   initOpeningOverlay();
@@ -126,10 +127,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const waxSeal = document.getElementById("waxSeal") || document.querySelector(".wax-seal");
     if (!overlay || !container) return;
 
+    if (btnOpen) btnOpen.classList.add("loading");
+
     let isOpening = false;
 
     function openEnvelope(e) {
       if (e) e.stopPropagation();
+      if (!isDataLoaded) {
+        alert("招待状データを読み込んでいます。少々お待ちください...");
+        return;
+      }
       if (isOpening) return;
       isOpening = true;
 
@@ -416,6 +423,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 取得したスプレッドシートデータでフォームを初期化
     populateForm(guestData, predefinedProxiesList, existingResponse);
 
+    // データの読み込み完了！開封ロック解除
+    isDataLoaded = true;
+    const btnOpen = document.getElementById("btnOpenInvitation");
+    if (btnOpen) btnOpen.classList.remove("loading");
+
     // 画面表示切り替え
     loadingContainer.classList.add("hidden");
     rsvpForm.classList.remove("hidden");
@@ -464,32 +476,41 @@ document.addEventListener("DOMContentLoaded", () => {
       const cat = (guest && guest.guestCategory ? guest.guestCategory : "-").trim();
       if (cat === "受付") {
         invitationTextElem.innerHTML =
-          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
-          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
-          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">皆様におかれましては</span><br>' +
+          '<span class="invitation-line">ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは</span><br>' +
+          '<span class="invitation-line">結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております</span><br>' +
+          '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 大変恐縮ですが 私共の受付係をお願いしたく</span><br>' +
-          '<span class="invitation-line">当日はお支度完了の上 12時30分までにお越しくださいますよう</span><br>' +
-          '<span class="invitation-line">お願い申し上げます</span>';
+          '<span class="invitation-line">当日はお支度完了の上 12時30分までに</span><br>' +
+          '<span class="invitation-line">お越しくださいますようお願い申し上げます</span>';
       } else if (cat === "親族") {
         invitationTextElem.innerHTML =
-          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
-          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
-          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">皆様におかれましては</span><br>' +
+          '<span class="invitation-line">ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは</span><br>' +
+          '<span class="invitation-line">結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております</span><br>' +
+          '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 恐縮でございますが 親族紹介にご参加賜りたく</span><br>' +
-          '<span class="invitation-line">当日はお支度完了の上 12時30分までにお越しいただきますよう</span><br>' +
-          '<span class="invitation-line">お願い申し上げます</span>';
+          '<span class="invitation-line">当日はお支度完了の上 12時30分までに</span><br>' +
+          '<span class="invitation-line">お越しいただきますようお願い申し上げます</span>';
       } else {
         // デフォルト (-)
         invitationTextElem.innerHTML =
-          '<span class="invitation-line">皆様におかれましては ますますご清祥のこととお慶び申し上げます</span><br>' +
-          '<span class="invitation-line">このたび 私たちは結婚式を挙げることとなりました</span><br>' +
-          '<span class="invitation-line">日頃お世話になっております皆様をお招きして</span><br>' +
+          '<span class="invitation-line">皆様におかれましては</span><br>' +
+          '<span class="invitation-line">ますますご清祥のこととお慶び申し上げます</span><br>' +
+          '<span class="invitation-line">このたび 私たちは</span><br>' +
+          '<span class="invitation-line">結婚式を挙げることとなりました</span><br>' +
+          '<span class="invitation-line">日頃お世話になっております</span><br>' +
+          '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 大変恐縮ですが 挙式にもご参列賜りたく</span><br>' +
-          '<span class="invitation-line">当日は 午後1時までにお越しくださいますよう</span><br>' +
-          '<span class="invitation-line">お願い申し上げます</span>';
+          '<span class="invitation-line">当日は 午後1時までに</span><br>' +
+          '<span class="invitation-line">お越しくださいますようお願い申し上げます</span>';
       }
     }
 
