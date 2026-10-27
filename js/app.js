@@ -368,15 +368,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * JSONPリクエストヘルパー (CORS回避用)
+   * JSONPリクエストヘルパー (CORS回避用 & タイムアウト保護付き)
    */
-  function fetchJSONP(url) {
+  function fetchJSONP(url, timeoutMs = 6000) {
     return new Promise((resolve, reject) => {
       const callbackName = "gasCallback_" + Math.round(1000000 * Math.random());
       const script = document.createElement("script");
       const separator = url.includes("?") ? "&" : "?";
 
+      const timer = setTimeout(() => {
+        delete window[callbackName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+        reject(new Error("JSONP Timeout Error"));
+      }, timeoutMs);
+
       window[callbackName] = (data) => {
+        clearTimeout(timer);
         delete window[callbackName];
         if (script.parentNode) script.parentNode.removeChild(script);
         resolve(data);
@@ -384,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       script.src = `${url}${separator}callback=${callbackName}`;
       script.onerror = () => {
+        clearTimeout(timer);
         delete window[callbackName];
         if (script.parentNode) script.parentNode.removeChild(script);
         reject(new Error("JSONP Script Load Error"));
@@ -419,6 +427,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // 全体10秒ローディングタイムアウト保護
+    let isTimedOut = false;
+    const overallTimer = setTimeout(() => {
+      isTimedOut = true;
+      showError("通信タイムアウト：データの読み込み時間が上限（10秒）を超えました。通信環境をご確認のうえ、画面を再読み込みしてください。");
+    }, 10000);
+
     let result = null;
 
     // 1. ⚡ スクリプト読み込み直後にバックグラウンドで開始された早割り通信Promise結果を優先活用！
@@ -431,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 2. 早割り通信で取得できなかった場合は標準 fetch (4秒タイムアウト保護付き) を試行
-    if (!result) {
+    if (!result && !isTimedOut) {
       const baseUrl = `${CONFIG.GAS_WEB_APP_URL}?token=${encodeURIComponent(token)}`;
       try {
         result = await fetchWithTimeout(baseUrl, 4000);
@@ -440,19 +455,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // 3. それでも取得できない場合は JSONP でフォールバック試行
-    if (!result) {
+    // 3. それでも取得できない場合は JSONP でフォールバック試行 (6秒タイムアウト保護付き)
+    if (!result && !isTimedOut) {
       try {
-        result = await fetchJSONP(`${CONFIG.GAS_WEB_APP_URL}?token=${encodeURIComponent(token)}`);
+        result = await fetchJSONP(`${CONFIG.GAS_WEB_APP_URL}?token=${encodeURIComponent(token)}`, 6000);
       } catch (jsonpErr) {
         console.error("JSONP fetch error:", jsonpErr);
-        showError(
-          "通信エラーが発生しました。\n" +
-          "Google Apps Scriptのデプロイ設定で「アクセスできるユーザー」が「全員 (Anyone)」になっているか、新しいバージョンでデプロイされているかご確認ください。"
-        );
+        clearTimeout(overallTimer);
+        if (!isTimedOut) {
+          showError(
+            "通信エラーが発生しました。\n" +
+            "Google Apps Scriptのデプロイ設定で「アクセスできるユーザー」が「全員 (Anyone)」になっているか、新しいバージョンでデプロイされているかご確認ください。"
+          );
+        }
         return;
       }
     }
+
+    clearTimeout(overallTimer);
+    if (isTimedOut) return;
 
     if (!result || !result.success) {
       showError((result && result.error) ? result.error : "データ取得に失敗しました。無効なトークンです。");
