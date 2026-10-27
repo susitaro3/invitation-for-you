@@ -112,19 +112,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // モーダル送信実行ボタン
   btnModalSubmit.addEventListener("click", handleFormSubmit);
 
-  // 準備中アラートモーダル関連
-  const loadingAlertModal = document.getElementById("loadingAlertModal");
-  const btnLoadingAlertClose = document.getElementById("btnLoadingAlertClose");
+  // 汎用カスタムアラートモーダル関連
+  let alertCloseCallback = null;
+  const customAlertModal = document.getElementById("customAlertModal");
+  const customAlertMessage = document.getElementById("customAlertMessage");
+  const btnCustomAlertClose = document.getElementById("btnCustomAlertClose");
 
-  if (btnLoadingAlertClose) {
-    btnLoadingAlertClose.addEventListener("click", () => {
-      if (loadingAlertModal) loadingAlertModal.classList.remove("active");
+  function showCustomAlert(message, callback) {
+    if (customAlertModal && customAlertMessage) {
+      customAlertMessage.textContent = message;
+      customAlertModal.classList.add("active");
+      alertCloseCallback = callback || null;
+    } else {
+      alert(message);
+      if (callback) callback();
+    }
+  }
+
+  if (btnCustomAlertClose) {
+    btnCustomAlertClose.addEventListener("click", () => {
+      if (customAlertModal) customAlertModal.classList.remove("active");
+      if (alertCloseCallback) {
+        const cb = alertCloseCallback;
+        alertCloseCallback = null;
+        cb();
+      }
     });
   }
-  if (loadingAlertModal) {
-    loadingAlertModal.addEventListener("click", (e) => {
-      if (e.target === loadingAlertModal) {
-        loadingAlertModal.classList.remove("active");
+  if (customAlertModal) {
+    customAlertModal.addEventListener("click", (e) => {
+      if (e.target === customAlertModal) {
+        customAlertModal.classList.remove("active");
+        if (alertCloseCallback) {
+          const cb = alertCloseCallback;
+          alertCloseCallback = null;
+          cb();
+        }
       }
     });
   }
@@ -154,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function openEnvelope(e) {
       if (e) e.stopPropagation();
       if (!isDataLoaded) {
-        if (loadingAlertModal) loadingAlertModal.classList.add("active");
+        showCustomAlert("招待状データを準備中です。\n恐れ入りますが、少々お待ちください。");
         return;
       }
       if (isOpening) return;
@@ -507,7 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 大変恐縮ですが 私共の受付係をお願いしたく</span><br>' +
-          '<span class="invitation-line">当日はお支度完了の上 12時30分までに</span><br>' +
+          '<span class="invitation-line">当日はお支度完了の上 <strong>12時30分までに</strong></span><br>' +
           '<span class="invitation-line">お越しくださいますようお願い申し上げます</span>';
       } else if (cat === "親族") {
         invitationTextElem.innerHTML =
@@ -519,7 +542,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 恐縮でございますが 親族紹介にご参加賜りたく</span><br>' +
-          '<span class="invitation-line">当日はお支度完了の上 12時30分までに</span><br>' +
+          '<span class="invitation-line">当日はお支度完了の上 <strong>12時30分までに</strong></span><br>' +
           '<span class="invitation-line">お越しいただきますようお願い申し上げます</span>';
       } else {
         // デフォルト (-)
@@ -532,7 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<span class="invitation-line">皆様をお招きして</span><br>' +
           '<span class="invitation-line">ささやかな宴を催したく存じます</span><br>' +
           '<span class="invitation-line">ご多用中 大変恐縮ですが 挙式にもご参列賜りたく</span><br>' +
-          '<span class="invitation-line">当日は 午後1時までに</span><br>' +
+          '<span class="invitation-line">当日は <strong>午後1時までに</strong></span><br>' +
           '<span class="invitation-line">お越しくださいますようお願い申し上げます</span>';
       }
     }
@@ -857,7 +880,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleConfirmClick() {
     const selectedAttendance = document.querySelector('input[name="attendance"]:checked');
     if (!selectedAttendance) {
-      alert("ご出欠（ご出席 / ご欠席）を選択してください。");
+      showCustomAlert("ご出欠（ご出席 / ご欠席）を選択してください。");
       return;
     }
 
@@ -865,24 +888,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 氏名・フリガナバリデーション
     if (!lastNameInput.value.trim() || !firstNameInput.value.trim()) {
-      alert("お名前（姓・名）を入力してください。");
+      showCustomAlert("お名前（姓・名）を入力してください。", () => lastNameInput.focus());
       return;
     }
     if (!kanaLastNameInput.value.trim() || !kanaFirstNameInput.value.trim()) {
-      alert("お名前のふりがな（せい・めい）を入力してください。");
+      showCustomAlert("お名前のふりがな（せい・めい）を入力してください。", () => kanaLastNameInput.focus());
       return;
     }
 
     // 出席時の必須項目バリデーション
     if (attendance === "出席") {
       if (!emailInput.value.trim() || !validateEmail(emailInput.value.trim())) {
-        alert("有効なメールアドレスをご入力ください。");
-        emailInput.focus();
+        showCustomAlert("有効なメールアドレスをご入力ください。", () => emailInput.focus());
         return;
       }
       if (!phoneInput.value.trim() || !validatePhone(phoneInput.value.trim())) {
-        alert("有効なお電話番号をご入力ください（例: 09012345678 または 090-1234-5678）。");
-        phoneInput.focus();
+        showCustomAlert("有効なお電話番号をご入力ください（例: 09012345678 または 090-1234-5678）。", () => phoneInput.focus());
         return;
       }
 
@@ -897,15 +918,17 @@ document.addEventListener("DOMContentLoaded", () => {
           const kln = card.querySelector(".proxy-kana-last").value.trim();
           const kfn = card.querySelector(".proxy-kana-first").value.trim();
           if (!ln || !fn) {
-            alert(`ご出席される同伴者様のお名前（姓・名）をご入力ください。`);
-            card.classList.add("open");
-            card.querySelector(!ln ? ".proxy-last-name" : ".proxy-first-name").focus();
+            showCustomAlert("ご出席される同伴者様のお名前（姓・名）をご入力ください。", () => {
+              card.classList.add("open");
+              card.querySelector(!ln ? ".proxy-last-name" : ".proxy-first-name").focus();
+            });
             return;
           }
           if (!kln || !kfn) {
-            alert(`ご出席される同伴者様のお名前のよみがな（せい・めい）をご入力ください。`);
-            card.classList.add("open");
-            card.querySelector(!kln ? ".proxy-kana-last" : ".proxy-kana-first").focus();
+            showCustomAlert("ご出席される同伴者様のお名前のよみがな（せい・めい）をご入力ください。", () => {
+              card.classList.add("open");
+              card.querySelector(!kln ? ".proxy-kana-last" : ".proxy-kana-first").focus();
+            });
             return;
           }
         }
@@ -1062,7 +1085,7 @@ document.addEventListener("DOMContentLoaded", () => {
         successCard.classList.remove("hidden");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        alert("送信中にエラーが発生しました: " + (result ? result.error : "詳細不明"));
+        showCustomAlert("送信中にエラーが発生しました: " + (result ? result.error : "詳細不明"));
         btnModalSubmit.disabled = false;
         btnModalSubmit.textContent = "送信する";
       }
@@ -1079,7 +1102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         successCard.classList.remove("hidden");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        alert("送信処理中にエラーが発生いたしました。通信環境をご確認のうえ再度お試しください。");
+        showCustomAlert("送信処理中にエラーが発生いたしました。通信環境をご確認のうえ再度お試しください。");
         btnModalSubmit.disabled = false;
         btnModalSubmit.textContent = "送信する";
       }
