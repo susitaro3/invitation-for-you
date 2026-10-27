@@ -1182,7 +1182,7 @@ textarea {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3000;
   padding: 20px;
   opacity: 0;
   visibility: hidden;
