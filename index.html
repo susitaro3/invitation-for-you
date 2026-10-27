@@ -124,8 +124,8 @@
         <span class="invitation-line">皆様をお招きして</span><br>
         <span class="invitation-line">ささやかな宴を催したく存じます</span><br>
         <span class="invitation-line">ご多用中 大変恐縮ですが 挙式にもご参列賜りたく</span><br>
-        <span class="invitation-line">当日は 午後1時までにお越しくださいますよう</span><br>
-        <span class="invitation-line">お願い申し上げます</span>
+        <span class="invitation-line">当日は <strong>午後1時までに</strong></span><br>
+        <span class="invitation-line">お越しくださいますようお願い申し上げます</span>
       </div>
 
       <div class="info-box">
@@ -367,17 +367,17 @@
     </div>
   </div>
 
-  <!-- 準備中アラートモーダル -->
-  <div id="loadingAlertModal" class="modal-overlay">
+  <!-- 汎用カスタムアラートモーダル -->
+  <div id="customAlertModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 400px; text-align: center; padding: 35px 25px;">
       <div class="modal-header" style="margin-bottom: 15px;">
         <h3 class="modal-title">✦ ご案内 ✦</h3>
       </div>
-      <p style="font-family: var(--font-serif); font-size: 0.95rem; color: #333; line-height: 1.8; margin-bottom: 25px;">
+      <p id="customAlertMessage" style="font-family: var(--font-serif); font-size: 0.95rem; color: #333; line-height: 1.8; margin-bottom: 25px; white-space: pre-line;">
         招待状データを準備中です。<br>恐れ入りますが、少々お待ちください。
       </p>
       <div>
-        <button type="button" id="btnLoadingAlertClose" class="btn-modal-submit" style="width: 100%; max-width: 200px;">閉じる</button>
+        <button type="button" id="btnCustomAlertClose" class="btn-modal-submit" style="width: 100%; max-width: 200px;">閉じる</button>
       </div>
     </div>
   </div>
