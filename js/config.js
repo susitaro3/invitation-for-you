@@ -3,7 +3,7 @@
  */
 const CONFIG = {
   // Google Apps Script でデプロイした Web App の URL をここに貼り付けてください
-  GAS_WEB_APP_URL: "https://script.google.com/macros/s/AKfycbzyEi36mVflMg6-30HwLvYZlrNPl6wLjC57wlcB6CA_VOtciKOxxQ5XstutPa-EkGfN4A/exec",
+  GAS_WEB_APP_URL: "https://script.google.com/macros/s/AKfycbyFEhZTCkMalX8ACiszMfKlCZxwAphOV0k_gXd7j0SuvojFFxJGMZPz5LsmrV8RtbUfvw/exec",
 
   // 式の基本情報（画面ヘッダー等で表示）
   GROOM_NAME: "小泉 竜馬",
