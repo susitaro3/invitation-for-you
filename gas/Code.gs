@@ -290,6 +290,19 @@ function getActiveSheetValues(sheet) {
   return sheet.getRange(1, 1, lastRow, lastCol).getValues();
 }
 
+/**
+ * 📱 電話番号の先頭ゼロ欠け補正ヘルパー (例: 9012345678 -> 09012345678)
+ */
+function formatPhoneGas(phone) {
+  if (!phone) return '';
+  var str = phone.toString().trim();
+  if (str === '') return '';
+  if (!/^0/.test(str) && !/^\+/.test(str) && /^\d{9,10}$/.test(str.replace(/[-\s]/g, ''))) {
+    return '0' + str;
+  }
+  return str;
+}
+
 // ==========================================================================
 // Web API (doGet / doPost) 処理
 // ==========================================================================
@@ -299,7 +312,7 @@ function doGet(e) {
 
   // 🚀 iOS LINE内蔵ブラウザ対応: iCal (.ics) カレンダーファイルダイレクト配信
   if (e && e.parameter && e.parameter.action === 'ics') {
-    return handleIcsCalendarDownload();
+    return handleIcsCalendarDownload(e);
   }
 
   try {
@@ -347,7 +360,7 @@ function doGet(e) {
           ageCategory: row[colAgeCategory] ? row[colAgeCategory].toString() : '大人',
           email: row[colEmail] ? row[colEmail].toString() : '',
           status: row[colStatus] ? row[colStatus].toString() : '未回答',
-          phone: row[colPhone] ? row[colPhone].toString() : '',
+          phone: row[colPhone] ? formatPhoneGas(row[colPhone]) : '',
           guestCategory: guestCat
         };
         break;
@@ -382,6 +395,11 @@ function doGet(e) {
       for (var p = 1; p < proxyData.length; p++) {
         var pRow = proxyData[p];
         if (pRow[pColToken] && pRow[pColToken].toString().trim() === token.trim()) {
+          var pStatus = pRow[pColStatus] ? pRow[pColStatus].toString().trim() : '未回答';
+
+          // 削除された同伴者は画面描画用データから除外する
+          if (pStatus === '削除') continue;
+
           predefinedProxies.push({
             proxyId: pRow[pColProxyId] ? pRow[pColProxyId].toString().trim() : ('proxy_' + p),
             token: token.trim(),
@@ -392,9 +410,9 @@ function doGet(e) {
             side: pRow[pColSide] ? pRow[pColSide].toString() : '新郎側',
             ageCategory: pRow[pColAgeCategory] ? pRow[pColAgeCategory].toString() : '大人',
             email: pRow[pColEmail] ? pRow[pColEmail].toString() : '',
-            status: pRow[pColStatus] ? pRow[pColStatus].toString() : '未回答',
+            status: pStatus,
             allergies: pRow[pColAllergies] ? pRow[pColAllergies].toString() : '',
-            phone: pRow[pColPhone] ? pRow[pColPhone].toString() : '',
+            phone: pRow[pColPhone] ? formatPhoneGas(pRow[pColPhone]) : '',
             fullName: (pRow[pColLastName] ? pRow[pColLastName].toString() : '') + ' ' + (pRow[pColFirstName] ? pRow[pColFirstName].toString() : '')
           });
         }
@@ -420,7 +438,7 @@ function doGet(e) {
             side: rRow[7] ? rRow[7].toString() : '',
             ageCategory: rRow[8] ? rRow[8].toString() : '',
             email: rRow[9] ? rRow[9].toString() : '',
-            phone: rRow[10] ? rRow[10].toString() : '',
+            phone: rRow[10] ? formatPhoneGas(rRow[10]) : '',
             allergies: rRow[11] ? rRow[11].toString() : '',
             predefinedProxiesResponse: rRow[12] ? rRow[12].toString() : '',
             additionalProxies: rRow[13] ? rRow[13].toString() : '',
@@ -448,8 +466,35 @@ function doGet(e) {
 /**
  * 🚀 iOS LINE内蔵ブラウザ対応: サーバーからダイレクトに.icsファイルを返却する関数
  */
-function handleIcsCalendarDownload() {
+function handleIcsCalendarDownload(e) {
   var scriptProps = PropertiesService.getScriptProperties();
+  var token = (e && e.parameter && e.parameter.token) ? e.parameter.token.trim() : '';
+
+  // 招待客区分（GuestCategory）に応じて開始時刻を動的に決定
+  var guestCat = '-';
+  if (token) {
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var tokenSheet = getSheetByNameLoose(ss, 'Tokens');
+      if (tokenSheet) {
+        var tokenMap = getHeaderColumnMap(tokenSheet);
+        var tokenData = getActiveSheetValues(tokenSheet);
+        var colToken = (tokenMap['token'] || 1) - 1;
+        var colCat = (tokenMap['guestcategory'] || tokenMap['招待客区分'] || 11) - 1;
+        for (var k = 1; k < tokenData.length; k++) {
+          if (tokenData[k][colToken] && tokenData[k][colToken].toString().trim() === token) {
+            var rawCat = tokenData[k][colCat] ? tokenData[k][colCat].toString().trim() : '';
+            guestCat = (rawCat === '親族' || rawCat === '受付') ? rawCat : '-';
+            break;
+          }
+        }
+      }
+    } catch (tokenErr) {}
+  }
+
+  var defaultStartIso = (guestCat === '受付' || guestCat === '親族') ? '2027-02-11T12:30:00+09:00' : '2027-02-11T13:00:00+09:00';
+  var defaultStartUtc = (guestCat === '受付' || guestCat === '親族') ? '20270211T033000Z' : '20270211T040000Z';
+
   var groomName = scriptProps.getProperty('GROOM_NAME') || '小泉 竜馬';
   var brideName = scriptProps.getProperty('BRIDE_NAME') || '大西 美保夏';
   var weddingDate = scriptProps.getProperty('WEDDING_DATE') || '2027年2月11日（木）';
@@ -457,7 +502,7 @@ function handleIcsCalendarDownload() {
   var venueName = scriptProps.getProperty('VENUE_NAME') || 'カサデアンジェラ青山';
   var venueAddress = scriptProps.getProperty('VENUE_ADDRESS') || '東京都港区南青山2-22-16';
 
-  var eventStart = scriptProps.getProperty('EVENT_START') || '2027-02-11T13:00:00+09:00';
+  var eventStart = scriptProps.getProperty('EVENT_START') || defaultStartIso;
   var eventEnd = scriptProps.getProperty('EVENT_END') || '2027-02-11T17:00:00+09:00';
 
   var title = groomName + ' & ' + brideName + ' 結婚式・披露宴';
@@ -473,7 +518,7 @@ function handleIcsCalendarDownload() {
     return fallbackStr;
   }
 
-  var startStr = parseIsoToUtcStr(eventStart, '20270211T040000Z');
+  var startStr = parseIsoToUtcStr(eventStart, defaultStartUtc);
   var endStr = parseIsoToUtcStr(eventEnd, '20270211T080000Z');
   var nowStr = Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'");
 
@@ -482,7 +527,7 @@ function handleIcsCalendarDownload() {
     'VERSION:2.0',
     'PRODID:-//Wedding Invitation//JA',
     'BEGIN:VEVENT',
-    'UID:wedding-' + new Date().getTime() + '@invitation',
+    'UID:wedding-' + (token ? token : new Date().getTime()) + '@invitation',
     'DTSTAMP:' + nowStr,
     'DTSTART:' + startStr,
     'DTEND:' + endStr,
@@ -591,7 +636,7 @@ function doPost(e) {
     var side = payload.side || '';
     var ageCategory = payload.ageCategory || '';
     var email = payload.email || '';
-    var phone = payload.phone || '';
+    var phone = formatPhoneGas(payload.phone || '');
     var allergies = payload.allergies || '';
 
     // 生のデータオブジェクト配列を保持
@@ -599,6 +644,9 @@ function doPost(e) {
     var predefinedProxiesFormattedText = formatPredefinedProxiesResponse(rawPredefinedProxiesObj);
     var additionalProxies = formatAdditionalProxies(payload.additionalProxies);
     var message = payload.message || '';
+
+    // 電話番号はGoogleスプレッドシートで数値化(頭ゼロ落ち)しないようシングルクォートで文字列固定化
+    var phoneSheetValue = phone ? ("'" + phone) : '';
 
     // Responses シート（履歴）への追加
     var proxiesResponseToStore = typeof rawPredefinedProxiesObj === 'object'
@@ -616,7 +664,7 @@ function doPost(e) {
       side,
       ageCategory,
       email,
-      phone,
+      phoneSheetValue,
       allergies,
       proxiesResponseToStore,
       additionalProxies,
@@ -632,7 +680,7 @@ function doPost(e) {
     if (tokenMap['agecategory'] && ageCategory) tokenSheet.getRange(tokenRowIndex, tokenMap['agecategory']).setValue(ageCategory);
     if (tokenMap['email'] && email) tokenSheet.getRange(tokenRowIndex, tokenMap['email']).setValue(email);
     if (tokenMap['status']) tokenSheet.getRange(tokenRowIndex, tokenMap['status']).setValue(attendance);
-    if (tokenMap['phone']) tokenSheet.getRange(tokenRowIndex, tokenMap['phone']).setValue(phone);
+    if (tokenMap['phone']) tokenSheet.getRange(tokenRowIndex, tokenMap['phone']).setValue(phoneSheetValue);
 
     // 🚀 PredefinedProxies シート（同伴者マスター）の該当行を動的ヘッダー列指定で直接更新！
     try {
@@ -685,6 +733,7 @@ function sendConfirmationEmail(payload) {
   var receptionTime = scriptProps.getProperty('RECEPTION_TIME') || '開場 13:00 / 挙式 13:30 / 披露宴 14:15~16:45';
   var venueName = scriptProps.getProperty('VENUE_NAME') || 'カサデアンジェラ青山';
   var venueAddress = scriptProps.getProperty('VENUE_ADDRESS') || '東京都港区南青山2-22-16';
+  var venuePhone = scriptProps.getProperty('VENUE_PHONE') || '03-3478-7222';
 
   // 編集・確認用URLの生成
   var frontendBaseUrl = scriptProps.getProperty('FRONTEND_URL') || '';
@@ -701,6 +750,45 @@ function sendConfirmationEmail(payload) {
   var title = scriptProps.getProperty('EMAIL_TITLE') || ('【ご回答完了】結婚式のご案内 - ' + groomName + ' & ' + brideName);
   var headerMsg = scriptProps.getProperty('EMAIL_HEADER_MSG') || 'このたびはWeb招待状のご回答をいただき、誠にありがとうございます。\n送信いただきましたご回答内容を下記の通りお受けいたしました。';
   var footerMsg = scriptProps.getProperty('EMAIL_FOOTER_MSG') || '皆様にお会いできますことを、心より楽しみにしております。';
+
+  // 招待客区分（GuestCategory）の取得 (受付 / 親族 / -)
+  var guestCat = '-';
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var tokenSheet = getSheetByNameLoose(ss, 'Tokens');
+    if (tokenSheet && payload.token) {
+      var tokenMap = getHeaderColumnMap(tokenSheet);
+      var tokenData = getActiveSheetValues(tokenSheet);
+      var colToken = (tokenMap['token'] || 1) - 1;
+      var colCat = (tokenMap['guestcategory'] || tokenMap['招待客区分'] || 11) - 1;
+      for (var k = 1; k < tokenData.length; k++) {
+        if (tokenData[k][colToken] && tokenData[k][colToken].toString().trim() === payload.token.trim()) {
+          var rawCat = tokenData[k][colCat] ? tokenData[k][colCat].toString().trim() : '';
+          guestCat = (rawCat === '親族' || rawCat === '受付') ? rawCat : '-';
+          break;
+        }
+      }
+    }
+  } catch (e) {}
+
+  // 区分ごとの時間注釈とカレンダー予定開始時刻 (UTC)
+  var timeNotePlain = '';
+  var timeNoteHtml = '';
+  var gcalDates = '20270211T040000Z/20270211T080000Z'; // デフォルト 13:00 (JST)
+
+  if (guestCat === '受付') {
+    timeNotePlain = '※受付を担当いただくため、当日はお支度完了の上 12:30までにお越しくださいますようお願い申し上げます。';
+    timeNoteHtml = '※受付を担当いただくため、当日はお支度完了の上 <strong>12:30まで</strong> にお越しくださいますようお願い申し上げます。';
+    gcalDates = '20270211T033000Z/20270211T080000Z'; // 12:30 (JST)
+  } else if (guestCat === '親族') {
+    timeNotePlain = '※親族紹介にご参加いただくため、当日はお支度完了の上 12:30までにお越しいただきますようお願い申し上げます。';
+    timeNoteHtml = '※親族紹介にご参加いただくため、当日はお支度完了の上 <strong>12:30まで</strong> にお越しいただきますようお願い申し上げます。';
+    gcalDates = '20270211T033000Z/20270211T080000Z'; // 12:30 (JST)
+  } else {
+    timeNotePlain = '※挙式にご参列いただくため、当日は午後1:00までにお越しくださいますようお願い申し上げます。';
+    timeNoteHtml = '※挙式にご参列いただくため、当日は <strong>午後1:00まで</strong> にお越しくださいますようお願い申し上げます。';
+    gcalDates = '20270211T040000Z/20270211T080000Z'; // 13:00 (JST)
+  }
 
   var body = guestName + ' 様\n\n' +
     headerMsg + '\n\n' +
@@ -731,9 +819,32 @@ function sendConfirmationEmail(payload) {
     '【挙式・披露宴のご案内】\n' +
     '・日時：' + weddingDate + '\n' +
     '・時間：' + receptionTime + '\n' +
+    '  ' + timeNotePlain + '\n' +
     '・場所：' + venueName + '\n' +
     '・住所：' + venueAddress + '\n' +
+    '・電話番号：' + venuePhone + '\n' +
     '--------------------------------------------------\n';
+
+  if (attendanceStatus === '出席') {
+    // カレンダー登録用リンクの生成（例外安全 & スクリプトプロパティ優先）
+    var webAppUrl = '';
+    try {
+      webAppUrl = scriptProps.getProperty('GAS_WEB_APP_URL') || ScriptApp.getService().getUrl() || '';
+    } catch (e) {
+      webAppUrl = 'https://script.google.com/macros/s/AKfycbzNNtFzeqGRerwOuTN-k19jNb0h2jPnJmXRVtMKlQTw0e1SwGffZnqaiHK0X-0cz8J0Yw/exec';
+    }
+    var icsLink = webAppUrl ? (webAppUrl.replace(/\/$/, '') + '?action=ics&token=' + encodeURIComponent(payload.token || '')) : '';
+    var gcalTitle = encodeURIComponent(groomName + ' & ' + brideName + ' 結婚式・披露宴');
+    var gcalDetails = encodeURIComponent('【結婚式のご案内】\n日時: ' + weddingDate + ' ' + receptionTime + '\n場所: ' + venueName + '\n住所: ' + venueAddress);
+    var gcalLocation = encodeURIComponent(venueName + ' ' + venueAddress);
+    var gcalLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + gcalTitle + '&dates=' + gcalDates + '&details=' + gcalDetails + '&location=' + gcalLocation;
+
+    body += '\n【カレンダーへの予定登録】\n' +
+      'スマートフォンやPCのカレンダーに予定を簡単に追加できます：\n' +
+      '・Googleカレンダーに追加:\n' + gcalLink + '\n\n' +
+      '・Appleカレンダー (.ics):\n' + (icsLink || '（URL未設定）') + '\n' +
+      '※iPhoneをご利用の方は、カレンダーアプリ起動後に表示される画面中央下の「カレンダーに追加」を押すと予定が保存されます。\n\n';
+  }
 
   if (editUrl) {
     body += '\n【回答の確認・修正について】\n' +
@@ -743,15 +854,93 @@ function sendConfirmationEmail(payload) {
 
   body += footerMsg + '\n\n' + groomName + ' & ' + brideName;
 
-  // ご指示の通り MailApp.sendEmail(sendto, title, body) を直接使用
+  // HTMLメールボディの構築
+  var htmlBody = '<div style="font-family: \'Shippori Mincho\', serif; color: #333333; line-height: 1.8; max-width: 600px; margin: 0 auto; padding: 20px; background: #faf8f5; border-radius: 12px;">' +
+    '<h2 style="color: #c5a059; text-align: center; border-bottom: 2px solid #e8d3c5; padding-bottom: 10px; font-family: \'Shippori Mincho\', serif;">結婚式ご出席のご案内</h2>' +
+    '<p><strong>' + escapeHtmlGas(guestName) + ' 様</strong></p>' +
+    '<p>' + escapeHtmlGas(headerMsg).replace(/\n/g, '<br>') + '</p>' +
+
+    '<div style="background: #ffffff; border: 1px solid #e2d8cd; border-radius: 8px; padding: 20px; margin: 20px 0;">' +
+      '<h3 style="color: #c5a059; margin-top: 0; font-size: 16px; border-bottom: 1px solid #f0e6de; padding-bottom: 6px;">【ご回答内容】</h3>' +
+      '<p><strong>・ご出欠：</strong>' + escapeHtmlGas(attendanceStatus) + '</p>' +
+      '<p><strong>・お名前：</strong>' + escapeHtmlGas(guestName) + '（' + escapeHtmlGas(payload.kanaLastName || '') + ' ' + escapeHtmlGas(payload.kanaFirstName || '') + ' 様）</p>';
+
+  if (attendanceStatus === '出席') {
+    htmlBody += '<p><strong>・メールアドレス：</strong>' + escapeHtmlGas(sendto) + '</p>' +
+      '<p><strong>・お電話番号：</strong>' + escapeHtmlGas(payload.phone || '') + '</p>';
+    if (payload.allergies) {
+      htmlBody += '<p><strong>・アレルギー等：</strong>' + escapeHtmlGas(payload.allergies) + '</p>';
+    }
+    var formattedProxies = formatPredefinedProxiesResponse(payload.predefinedProxiesResponse);
+    if (formattedProxies) {
+      htmlBody += '<p style="margin-top:10px;"><strong>【ご同伴者様】</strong><br>' + escapeHtmlGas(formattedProxies).replace(/\n/g, '<br>') + '</p>';
+    }
+  }
+
+  if (payload.message) {
+    htmlBody += '<p style="margin-top:10px;"><strong>【メッセージ】</strong><br>' + escapeHtmlGas(payload.message).replace(/\n/g, '<br>') + '</p>';
+  }
+
+  htmlBody += '</div>' +
+    '<div style="background: #ffffff; border: 1px solid #e2d8cd; border-radius: 8px; padding: 20px; margin: 20px 0;">' +
+      '<h3 style="color: #c5a059; margin-top: 0; font-size: 16px; border-bottom: 1px solid #f0e6de; padding-bottom: 6px;">【挙式・披露宴のご案内】</h3>' +
+      '<p><strong>・日時：</strong>' + escapeHtmlGas(weddingDate) + '</p>' +
+      '<p><strong>・時間：</strong>' + escapeHtmlGas(receptionTime) + '</p>' +
+      '<p style="font-size: 13px; color: #c5a059; margin-top: -5px; margin-bottom: 12px; line-height: 1.5;">' + timeNoteHtml + '</p>';
+
+  if (attendanceStatus === '出席') {
+    var webAppUrl = '';
+    try {
+      webAppUrl = scriptProps.getProperty('GAS_WEB_APP_URL') || ScriptApp.getService().getUrl() || '';
+    } catch (e) {
+      webAppUrl = 'https://script.google.com/macros/s/AKfycbzNNtFzeqGRerwOuTN-k19jNb0h2jPnJmXRVtMKlQTw0e1SwGffZnqaiHK0X-0cz8J0Yw/exec';
+    }
+    var icsLink = webAppUrl ? (webAppUrl.replace(/\/$/, '') + '?action=ics') : '';
+    var gcalTitle = encodeURIComponent(groomName + ' & ' + brideName + ' 結婚式・披露宴');
+    var gcalDetails = encodeURIComponent('【結婚式のご案内】\n日時: ' + weddingDate + ' ' + receptionTime + '\n場所: ' + venueName + '\n住所: ' + venueAddress);
+    var gcalLocation = encodeURIComponent(venueName + ' ' + venueAddress);
+    var gcalLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + gcalTitle + '&dates=20270211T040000Z/20270211T080000Z&details=' + gcalDetails + '&location=' + gcalLocation;
+
+    htmlBody += '<div style="margin: 12px 0 15px 0; padding: 12px; background: #fcf9f2; border-radius: 6px; border: 1px dashed #c5a059;">' +
+      '<span style="font-size: 13px; font-weight: bold; color: #c5a059; margin-right: 10px;">📅 カレンダーへの予定登録：</span>' +
+      '<a href="' + gcalLink + '" target="_blank" style="display: inline-block; margin-right: 8px; margin-bottom: 4px; padding: 5px 10px; background: #c5a059; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: bold;">Googleカレンダーに追加</a>' +
+      '<a href="' + icsLink + '" target="_blank" style="display: inline-block; margin-bottom: 4px; padding: 5px 10px; background: #ffffff; color: #c5a059; border: 1px solid #c5a059; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: bold;">Appleカレンダー (.ics)</a>' +
+      '<p style="font-size: 11px; color: #777777; margin: 6px 0 0 0; line-height: 1.4;">※iPhone(Appleカレンダー)をご利用の方は、画面が開いた後、右上の<strong>「追加」</strong>を押すと保存されます。</p>' +
+    '</div>';
+  }
+
+  htmlBody += '<p><strong>・場所：</strong>' + escapeHtmlGas(venueName) + '</p>' +
+    '<p><strong>・住所：</strong>' + escapeHtmlGas(venueAddress) + '</p>' +
+    '<p><strong>・電話番号：</strong>' + escapeHtmlGas(venuePhone) + '</p>' +
+    '</div>';
+
+  if (editUrl) {
+    htmlBody += '<div style="background: #fdfbf7; border: 1px solid #e2d8cd; border-radius: 8px; padding: 15px; margin: 20px 0; font-size: 14px; text-align: center;">' +
+      '<strong>【回答の確認・修正について】</strong><br>' +
+      'ご回答内容を変更される場合は、下記ボタンよりいつでも修正いただけます。<br><br>' +
+      '<a href="' + editUrl + '" target="_blank" style="display: inline-block; padding: 10px 20px; background: #c5a059; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: bold; box-shadow: 0 2px 5px rgba(197,160,89,0.3);">修正はこちらから</a>' +
+      '</div>';
+  }
+
+  htmlBody += '<p style="text-align: center; margin-top: 30px; color: #666666;">' + escapeHtmlGas(footerMsg) + '</p>' +
+    '<p style="text-align: center; font-family: serif; font-size: 16px; color: #c5a059; font-weight: bold;">' + escapeHtmlGas(groomName + ' & ' + brideName) + '</p>' +
+    '</div>';
+
+  // ご指示の通り MailApp.sendEmail に htmlBody を付与して送信
   try {
-    MailApp.sendEmail(sendto, title, body);
+    MailApp.sendEmail(sendto, title, body, {
+      htmlBody: htmlBody,
+      name: groomName + ' & ' + brideName + ' 結婚式事務局'
+    });
     Logger.log('MailApp.sendEmail success: ' + sendto);
     return 'Sent via MailApp to ' + sendto;
   } catch (err) {
     Logger.log('MailApp.sendEmail error: ' + err.toString());
     try {
-      GmailApp.sendEmail(sendto, title, body);
+      GmailApp.sendEmail(sendto, title, body, {
+        htmlBody: htmlBody,
+        name: groomName + ' & ' + brideName + ' 結婚式事務局'
+      });
       return 'Sent via GmailApp to ' + sendto;
     } catch (err2) {
       return 'Failed: ' + err2.toString();
@@ -760,101 +949,113 @@ function sendConfirmationEmail(payload) {
 }
 
 /**
- * 🚀 PredefinedProxies シートの該当行をユーザー入力内容でダイレクト更新する関数
+ * 簡易HTMLエスケープヘルパー (GAS用)
+ */
+function escapeHtmlGas(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+/**
+ * 🚀 PredefinedProxies シートの該当行をユーザー入力内容でダイレクト更新・追加・削除同期する関数
  */
 function updatePredefinedProxiesSheet(ss, token, proxiesResponse, mainPayload) {
-  if (!proxiesResponse) return;
-
   var proxySheet = getSheetByNameLoose(ss, 'PredefinedProxies');
-  if (!proxySheet) return;
-
-  var proxiesList = proxiesResponse;
-  if (typeof proxiesResponse === 'string') {
-    try {
-      proxiesList = JSON.parse(proxiesResponse);
-    } catch (e) {
-      return;
-    }
-  }
-
-  if (!Array.isArray(proxiesList)) return;
+  if (!proxySheet || !token) return;
 
   var proxyMap = getHeaderColumnMap(proxySheet);
   var proxyData = getActiveSheetValues(proxySheet);
+  if (proxyData.length <= 1) return;
 
   var colProxyId = (proxyMap['proxyid'] || 1) - 1;
   var colToken = (proxyMap['token'] || 2) - 1;
-  var colLastName = (proxyMap['lastname'] || 3) - 1;
-  var colFirstName = (proxyMap['firstname'] || 4) - 1;
+  var colStatus = (proxyMap['status'] || 10); // 1-indexed
 
-  for (var i = 0; i < proxiesList.length; i++) {
-    var item = proxiesList[i];
-    if (!item) continue;
+  var isMainDeclined = mainPayload && mainPayload.attendance === '欠席';
 
-    var targetProxyId = item.proxyId ? item.proxyId.toString().trim() : '';
-    var targetLastName = item.lastName ? item.lastName.toString().trim() : '';
-    var targetFirstName = item.firstName ? item.firstName.toString().trim() : '';
+  var proxiesList = [];
+  if (proxiesResponse) {
+    if (typeof proxiesResponse === 'string') {
+      try { proxiesList = JSON.parse(proxiesResponse); } catch (e) { proxiesList = []; }
+    } else if (Array.isArray(proxiesResponse)) {
+      proxiesList = proxiesResponse;
+    }
+  }
 
-    var targetRowNum = -1;
+  // 送信された ProxyId のマップを作成
+  var submittedProxyIds = {};
+  for (var k = 0; k < proxiesList.length; k++) {
+    if (proxiesList[k] && proxiesList[k].proxyId) {
+      submittedProxyIds[proxiesList[k].proxyId.toString().trim()] = proxiesList[k];
+    }
+  }
 
-    // 1. まず ProxyId で精密マッチング検索 (A列)
-    if (targetProxyId) {
-      for (var p = 1; p < proxyData.length; p++) {
-        var rowProxyId = proxyData[p][colProxyId] ? proxyData[p][colProxyId].toString().trim() : '';
-        if (rowProxyId && rowProxyId === targetProxyId) {
-          targetRowNum = p + 1;
-          break;
+  // 1. スプレッドシート上の既存行の更新
+  for (var p = 1; p < proxyData.length; p++) {
+    var rowToken = proxyData[p][colToken] ? proxyData[p][colToken].toString().trim() : '';
+    if (rowToken === token.trim()) {
+      var rowProxyId = proxyData[p][colProxyId] ? proxyData[p][colProxyId].toString().trim() : '';
+      var rowNum = p + 1;
+
+      if (isMainDeclined) {
+        // 主出席者が欠席の場合は同伴者も全件「欠席」に更新
+        if (colStatus) proxySheet.getRange(rowNum, colStatus).setValue('欠席');
+      } else if (submittedProxyIds[rowProxyId]) {
+        // 送信データに存在する同伴者情報の更新
+        var item = submittedProxyIds[rowProxyId];
+        if (proxyMap['lastname'] && item.lastName !== undefined) proxySheet.getRange(rowNum, proxyMap['lastname']).setValue(item.lastName);
+        if (proxyMap['firstname'] && item.firstName !== undefined) proxySheet.getRange(rowNum, proxyMap['firstname']).setValue(item.firstName);
+        if (proxyMap['kanalastname'] && item.kanaLastName !== undefined) proxySheet.getRange(rowNum, proxyMap['kanalastname']).setValue(item.kanaLastName);
+        if (proxyMap['kanafirstname'] && item.kanaFirstName !== undefined) proxySheet.getRange(rowNum, proxyMap['kanafirstname']).setValue(item.kanaFirstName);
+        if (proxyMap['agecategory'] && item.ageCategory !== undefined) proxySheet.getRange(rowNum, proxyMap['agecategory']).setValue(item.ageCategory);
+        if (colStatus) proxySheet.getRange(rowNum, colStatus).setValue(item.attending ? '出席' : '欠席');
+        if (proxyMap['allergies'] && item.allergies !== undefined) proxySheet.getRange(rowNum, proxyMap['allergies']).setValue(item.allergies);
+        if (proxyMap['phone'] && item.phone !== undefined) {
+          var pPhone = formatPhoneGas(item.phone);
+          proxySheet.getRange(rowNum, proxyMap['phone']).setValue(pPhone ? ("'" + pPhone) : '');
         }
+
+        // 処理済みマーク削除
+        delete submittedProxyIds[rowProxyId];
+      } else {
+        // 画面上から削除された同伴者は「削除」ステータスへ更新（再アクセス時の復活を完全防止）
+        if (colStatus) proxySheet.getRange(rowNum, colStatus).setValue('削除');
       }
     }
+  }
 
-    // 2. もし ProxyId でマッチしない場合、Token + 氏名でフォールバックマッチング
-    if (targetRowNum === -1 && token) {
-      for (var p2 = 1; p2 < proxyData.length; p2++) {
-        var rowToken = proxyData[p2][colToken] ? proxyData[p2][colToken].toString().trim() : '';
-        var rowLn = proxyData[p2][colLastName] ? proxyData[p2][colLastName].toString().trim() : '';
-        var rowFn = proxyData[p2][colFirstName] ? proxyData[p2][colFirstName].toString().trim() : '';
-
-        if (rowToken === token.trim() && (rowLn === targetLastName || rowFn === targetFirstName)) {
-          targetRowNum = p2 + 1;
-          break;
+  // 2. 主出席者が出席で、新規追加（スプレッドシート未存在）の同伴者の行追加
+  if (!isMainDeclined) {
+    for (var key in submittedProxyIds) {
+      if (submittedProxyIds.hasOwnProperty(key)) {
+        var newItem = submittedProxyIds[key];
+        var maxCol = proxySheet.getLastColumn() || 12;
+        var newProxyRow = [];
+        for (var c = 0; c < maxCol; c++) {
+          newProxyRow.push('');
         }
+
+        if (proxyMap['proxyid']) newProxyRow[proxyMap['proxyid'] - 1] = key;
+        if (proxyMap['token']) newProxyRow[proxyMap['token'] - 1] = token;
+        if (proxyMap['lastname']) newProxyRow[proxyMap['lastname'] - 1] = newItem.lastName || '';
+        if (proxyMap['firstname']) newProxyRow[proxyMap['firstname'] - 1] = newItem.firstName || '';
+        if (proxyMap['kanalastname']) newProxyRow[proxyMap['kanalastname'] - 1] = newItem.kanaLastName || '';
+        if (proxyMap['kanafirstname']) newProxyRow[proxyMap['kanafirstname'] - 1] = newItem.kanaFirstName || '';
+        if (proxyMap['side']) newProxyRow[proxyMap['side'] - 1] = mainPayload ? (mainPayload.side || '新郎側') : '新郎側';
+        if (proxyMap['agecategory']) newProxyRow[proxyMap['agecategory'] - 1] = newItem.ageCategory || '大人';
+        if (proxyMap['status']) newProxyRow[proxyMap['status'] - 1] = newItem.attending ? '出席' : '欠席';
+        if (proxyMap['allergies']) newProxyRow[proxyMap['allergies'] - 1] = newItem.allergies || '';
+        if (proxyMap['phone']) {
+          var newPPhone = formatPhoneGas(newItem.phone || '');
+          newProxyRow[proxyMap['phone'] - 1] = newPPhone ? ("'" + newPPhone) : '';
+        }
+
+        proxySheet.appendRow(newProxyRow);
       }
-    }
-
-    if (targetRowNum !== -1) {
-      // 動的ヘッダー列番号に基づいてセルをダイレクト書き込み
-      if (proxyMap['lastname'] && item.lastName !== undefined) proxySheet.getRange(targetRowNum, proxyMap['lastname']).setValue(item.lastName);
-      if (proxyMap['firstname'] && item.firstName !== undefined) proxySheet.getRange(targetRowNum, proxyMap['firstname']).setValue(item.firstName);
-      if (proxyMap['kanalastname'] && item.kanaLastName !== undefined) proxySheet.getRange(targetRowNum, proxyMap['kanalastname']).setValue(item.kanaLastName);
-      if (proxyMap['kanafirstname'] && item.kanaFirstName !== undefined) proxySheet.getRange(targetRowNum, proxyMap['kanafirstname']).setValue(item.kanaFirstName);
-      if (proxyMap['agecategory'] && item.ageCategory !== undefined) proxySheet.getRange(targetRowNum, proxyMap['agecategory']).setValue(item.ageCategory);
-      if (proxyMap['status']) proxySheet.getRange(targetRowNum, proxyMap['status']).setValue(item.attending ? '出席' : '欠席');
-      if (proxyMap['allergies'] && item.allergies !== undefined) proxySheet.getRange(targetRowNum, proxyMap['allergies']).setValue(item.allergies);
-      if (proxyMap['phone'] && item.phone !== undefined) proxySheet.getRange(targetRowNum, proxyMap['phone']).setValue(item.phone);
-    } else {
-      // 🚀 新規追加の同伴者様の場合は PredefinedProxies シートへ行追加！
-      var maxCol = proxySheet.getLastColumn() || 12;
-      var newProxyRow = [];
-      for (var c = 0; c < maxCol; c++) {
-        newProxyRow.push('');
-      }
-
-      var genProxyId = targetProxyId || ('proxy_dyn_' + Date.now() + '_' + i);
-
-      if (proxyMap['proxyid']) newProxyRow[proxyMap['proxyid'] - 1] = genProxyId;
-      if (proxyMap['token']) newProxyRow[proxyMap['token'] - 1] = token;
-      if (proxyMap['lastname']) newProxyRow[proxyMap['lastname'] - 1] = item.lastName || '';
-      if (proxyMap['firstname']) newProxyRow[proxyMap['firstname'] - 1] = item.firstName || '';
-      if (proxyMap['kanalastname']) newProxyRow[proxyMap['kanalastname'] - 1] = item.kanaLastName || '';
-      if (proxyMap['kanafirstname']) newProxyRow[proxyMap['kanafirstname'] - 1] = item.kanaFirstName || '';
-      if (proxyMap['side']) newProxyRow[proxyMap['side'] - 1] = mainPayload ? (mainPayload.side || '新郎側') : '新郎側';
-      if (proxyMap['agecategory']) newProxyRow[proxyMap['agecategory'] - 1] = item.ageCategory || '大人';
-      if (proxyMap['status']) newProxyRow[proxyMap['status'] - 1] = item.attending ? '出席' : '欠席';
-      if (proxyMap['allergies']) newProxyRow[proxyMap['allergies'] - 1] = item.allergies || '';
-      if (proxyMap['phone']) newProxyRow[proxyMap['phone'] - 1] = item.phone || '';
-
-      proxySheet.appendRow(newProxyRow);
     }
   }
 }
@@ -913,6 +1114,79 @@ function formatAdditionalProxies(addProxiesRaw) {
     // 通常文字列の場合はそのまま返却
   }
   return addProxiesRaw;
+}
+
+/**
+ * 💌 【マクロ】Tokensシートの全ゲストに対して、
+ * 「[お名前] 様\n回答はこちらから（[お名前]様専用のURLになります）：\n[URL]?token=[token]」
+ * という案内メッセージを「Message」シートへハイパーリンク形式で一括出力する関数
+ */
+function generateInvitationMessages() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tokenSheet = getSheetByNameLoose(ss, 'Tokens');
+  if (!tokenSheet) {
+    SpreadsheetApp.getUi().alert('エラー: Tokensシートが見つかりません。');
+    return;
+  }
+
+  var scriptProps = PropertiesService.getScriptProperties();
+  var frontendBaseUrl = scriptProps.getProperty('FRONTEND_URL') || '';
+  if (!frontendBaseUrl) {
+    frontendBaseUrl = 'https://<your-username>.github.io/<repo-name>/';
+  }
+
+  var tokenMap = getHeaderColumnMap(tokenSheet);
+  var tokenData = getActiveSheetValues(tokenSheet);
+  if (tokenData.length <= 1) {
+    SpreadsheetApp.getUi().alert('Tokensシートにデータ行がありません。');
+    return;
+  }
+
+  // "Message" シートの生成・初期化
+  var messageSheet = ss.getSheetByName('Message') || ss.getSheetByName('message');
+  if (!messageSheet) {
+    messageSheet = ss.insertSheet('Message');
+  } else {
+    messageSheet.clear();
+  }
+
+  var headers = ['宛名', '案内メッセージ', '専用URL (クリック可能)'];
+  messageSheet.appendRow(headers);
+  formatHeaderRow(messageSheet, headers.length, '#c5a059');
+
+  var colToken = tokenMap['token'] || 1;
+  var colLastName = tokenMap['lastname'] || 2;
+  var colFirstName = tokenMap['firstname'] || 3;
+
+  var count = 0;
+  for (var r = 1; r < tokenData.length; r++) {
+    var rowToken = tokenData[r][colToken - 1] ? tokenData[r][colToken - 1].toString().trim() : '';
+    var rowLn = tokenData[r][colLastName - 1] ? tokenData[r][colLastName - 1].toString().trim() : '';
+    var rowFn = tokenData[r][colFirstName - 1] ? tokenData[r][colFirstName - 1].toString().trim() : '';
+
+    if (rowToken && rowLn && rowFn) {
+      var guestFullName = rowLn + ' ' + rowFn + ' 様';
+      var messageTemplate = rowLn + ' ' + rowFn + ' 様\n回答はこちらから（' + rowLn + ' ' + rowFn + '様専用のURLになります）：';
+      var personalUrl = frontendBaseUrl.replace(/\/$/, '') + '/?token=' + encodeURIComponent(rowToken);
+
+      // Google Sheets の HYPERLINK 数式をセット
+      var hyperlinkFormula = '=HYPERLINK("' + personalUrl + '", "専用URLを開く")';
+
+      messageSheet.appendRow([
+        guestFullName,
+        messageTemplate,
+        hyperlinkFormula
+      ]);
+      count++;
+    }
+  }
+
+  messageSheet.setColumnWidth(1, 140);
+  messageSheet.setColumnWidth(2, 350);
+  messageSheet.setColumnWidth(3, 180);
+
+  var ui = SpreadsheetApp.getUi();
+  ui.alert('【Messageシート出力完了】\n「Message」シートに ' + count + ' 件のゲスト専用案内メッセージとハイパーリンクを出力しました。');
 }
 
 /**

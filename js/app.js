@@ -339,9 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function preloadGalleryImages() {
     const imagesToPreload = [
-      "images/FJI_6409.jpg",
-      "images/FJI_6424.jpg",
-      "images/FJI_6456.jpg",
+      "images/Image1.png",
+      "images/Image2.jpg",
+      "images/Image3.jpg",
       "images/ending.jpg",
       "images/wax-seal.svg",
       "images/wedding-icon.svg"
